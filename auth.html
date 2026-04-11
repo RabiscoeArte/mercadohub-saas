@@ -352,7 +352,7 @@
     projectId: "mercadohub-saas",
     storageBucket: "mercadohub-saas.firebasestorage.app",
     messagingSenderId: "929142456645",
-    appId: "1:929142456645:web:4e1c079baaa6f75d13be2c"
+    appId: "1:329142456645:web:4e1c079baaa6f75d13be2c"
   };
 
   // Inicializar Firebase
@@ -360,7 +360,7 @@
   const auth = firebase.auth();
   const db = firebase.firestore();
 
-  console.log("✅ Firebase inicializado com sucesso!");
+  console.log("✅ Firebase inicializado!");
 
   // ===== FUNÇÕES =====
 
@@ -371,7 +371,6 @@
     document.getElementById(tab).classList.add('active');
     event.target.classList.add('active');
 
-    // Limpar alertas
     document.getElementById('registerAlert').classList.remove('show');
     document.getElementById('loginAlert').classList.remove('show');
   }
@@ -385,11 +384,7 @@
     const alert = document.getElementById(alertId);
     alert.textContent = message;
     alert.className = `alert show alert-${type}`;
-    
-    // Auto-remover após 5 segundos
-    setTimeout(() => {
-      alert.classList.remove('show');
-    }, 5000);
+    setTimeout(() => alert.classList.remove('show'), 5000);
   }
 
   async function handleRegister(e) {
@@ -402,7 +397,6 @@
     const plan = document.getElementById('registerPlan').value;
     const btn = document.getElementById('registerBtn');
 
-    // Validação básica
     if (!name || !email || !password || !storeName) {
       showAlert('registerAlert', '❌ Preencha todos os campos', 'error');
       return;
@@ -418,12 +412,10 @@
     btn.innerHTML = '<span class="spinner"></span>Criando conta...';
 
     try {
-      // Criar usuário
       const userCredential = await auth.createUserWithEmailAndPassword(email, password);
       const user = userCredential.user;
       console.log("✅ Usuário criado:", user.uid);
 
-      // Criar documento do usuário no Firestore
       await db.collection('users').doc(user.uid).set({
         uid: user.uid,
         nome: name,
@@ -436,7 +428,6 @@
       });
       console.log("✅ Documento de usuário criado");
 
-      // Criar loja automática
       const lojaRef = await db.collection('lojas').add({
         uid_owner: user.uid,
         nome: storeName,
@@ -448,17 +439,14 @@
       });
       console.log("✅ Loja criada:", lojaRef.id);
 
-      // Adicionar loja ao documento do usuário
       await db.collection('users').doc(user.uid).update({
         lojas: firebase.firestore.FieldValue.arrayUnion(lojaRef.id)
       });
       console.log("✅ Registro completo!");
 
-      // Mostrar sucesso e redirecionar
       showAlert('registerAlert', '✅ Conta criada com sucesso! Redirecionando...', 'success');
       btn.textContent = originalText;
       
-      // Redirecionar após 1.5 segundos
       setTimeout(() => {
         window.location.href = `/dashboard.html?loja=${lojaRef.id}`;
       }, 1500);
@@ -468,7 +456,6 @@
       
       let mensagem = error.message;
       
-      // Mensagens customizadas
       if (error.code === 'auth/email-already-in-use') {
         mensagem = 'Email já registrado. Tente outro ou faça login.';
       } else if (error.code === 'auth/weak-password') {
@@ -504,31 +491,38 @@
     btn.innerHTML = '<span class="spinner"></span>Entrando...';
 
     try {
-      // Fazer login
       const userCredential = await auth.signInWithEmailAndPassword(email, password);
-      // ← ADICIONE ISTO:
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    // ← Aguarda 1 segundo para Firestore conectar
-      
-      console.log("✅ Login realizado:", userCredential.user.uid);
+      console.log("✅ Autenticação bem-sucedida:", userCredential.user.uid);
 
-      // Buscar primeira loja do usuário
-      const userDoc = await db.collection('users').doc(userCredential.user.uid).get();
-      
-      if (userDoc.exists) {
-        const lojas = userDoc.data().lojas || [];
-        if (lojas.length > 0) {
-          console.log("✅ Loja encontrada:", lojas[0]);
-          showAlert('loginAlert', '✅ Login realizado! Redirecionando...', 'success');
+      // 🔧 CORREÇÃO: Aguardar Firestore conectar
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log("✅ Aguardou 2 segundos para Firestore");
+
+      // Buscar dados do usuário
+      try {
+        const userDoc = await db.collection('users').doc(userCredential.user.uid).get();
+        
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          const lojas = userData.lojas || [];
           
-          setTimeout(() => {
-            window.location.href = `/dashboard.html?loja=${lojas[0]}`;
-          }, 1500);
+          if (lojas.length > 0) {
+            console.log("✅ Lojas encontradas:", lojas);
+            showAlert('loginAlert', '✅ Login realizado! Redirecionando...', 'success');
+            
+            setTimeout(() => {
+              window.location.href = `/dashboard.html?loja=${lojas[0]}`;
+            }, 1500);
+          } else {
+            throw new Error('Nenhuma loja associada a este usuário');
+          }
         } else {
-          throw new Error('Nenhuma loja encontrada para este usuário');
+          console.error("⚠️ Documento de usuário não encontrado");
+          throw new Error('Usuário não encontrado no banco de dados');
         }
-      } else {
-        throw new Error('Usuário não encontrado');
+      } catch (firestoreError) {
+        console.error("❌ Erro Firestore:", firestoreError.message);
+        throw firestoreError;
       }
 
     } catch (error) {
@@ -541,9 +535,11 @@
       } else if (error.code === 'auth/wrong-password') {
         mensagem = 'Senha incorreta.';
       } else if (error.code === 'auth/too-many-login-attempts') {
-        mensagem = 'Muitas tentativas de login. Aguarde 15 minutos.';
+        mensagem = 'Muitas tentativas. Aguarde 15 minutos.';
       } else if (error.code === 'auth/invalid-email') {
         mensagem = 'Email inválido.';
+      } else if (error.message && error.message.includes('offline')) {
+        mensagem = 'Firestore não conseguiu conectar. Tente novamente.';
       }
       
       showAlert('loginAlert', `❌ ${mensagem}`, 'error');
@@ -552,14 +548,13 @@
     }
   }
 
-  // Verificar se já está logado
   auth.onAuthStateChanged(user => {
     if (user) {
       console.log("✅ Usuário já logado:", user.email);
     }
   });
 
-  console.log("✅ Script auth.html carregado com sucesso!");
+  console.log("✅ Auth.html carregado!");
 </script>
 
 </body>
