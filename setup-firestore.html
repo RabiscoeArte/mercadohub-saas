@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Setup Firestore - MercadoHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #ff6b35, #d84315);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      padding: 2rem;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2rem;
+      background: linear-gradient(135deg, #ff6b35, #d84315);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 0.95rem;
+    }
+
+    .firebase-config {
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      border: 2px solid #e0e0e0;
+    }
+
+    .firebase-config h3 {
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+      color: #333;
+    }
+
+    .config-input {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      margin-bottom: 0.8rem;
+      font-family: 'Courier New', monospace;
+    }
+
+    .config-input::placeholder {
+      color: #999;
+    }
+
+    .collections {
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+    }
+
+    .collections h3 {
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+      color: #333;
+    }
+
+    .collection-item {
+      display: flex;
+      align-items: center;
+      padding: 0.8rem;
+      background: white;
+      border-radius: 8px;
+      margin-bottom: 0.8rem;
+      border-left: 4px solid #ff6b35;
+    }
+
+    .collection-item.done {
+      border-left-color: #2e7d32;
+      background: #f1f8f4;
+    }
+
+    .collection-status {
+      font-size: 1.5rem;
+      margin-right: 1rem;
+    }
+
+    .collection-name {
+      flex: 1;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .collection-desc {
+      font-size: 0.8rem;
+      color: #999;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn {
+      padding: 1rem;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 0.95rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #ff6b35, #d84315);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(255, 107, 53, 0.3);
+    }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .status-message {
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      display: none;
+      font-size: 0.9rem;
+    }
+
+    .status-message.show {
+      display: block;
+    }
+
+    .status-message.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status-message.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .status-message.loading {
+      background: #e7f3ff;
+      color: #0c5aa0;
+      border: 1px solid #b3d9ff;
+    }
+
+    .rules-section {
+      background: #fff3e0;
+      padding: 1.5rem;
+      border-radius: 12px;
+      border-left: 4px solid #ff6b35;
+      margin-bottom: 1.5rem;
+    }
+
+    .rules-section h4 {
+      color: #e65100;
+      margin-bottom: 0.8rem;
+      font-size: 0.95rem;
+    }
+
+    .rules-section p {
+      font-size: 0.85rem;
+      color: #d84315;
+      line-height: 1.6;
+    }
+
+    .rules-code {
+      background: white;
+      padding: 0.8rem;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      overflow-x: auto;
+      color: #333;
+      margin-top: 0.8rem;
+    }
+
+    .copy-btn {
+      background: white;
+      border: 1px solid #ddd;
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      margin-top: 0.5rem;
+    }
+
+    .copy-btn:hover {
+      background: #f0f0f0;
+    }
+
+    .step-indicator {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.8rem;
+    }
+
+    .step {
+      flex: 1;
+      padding: 0.6rem;
+      background: #f0f0f0;
+      border-radius: 6px;
+      text-align: center;
+      font-weight: 600;
+      color: #999;
+    }
+
+    .step.active {
+      background: #ff6b35;
+      color: white;
+    }
+
+    .step.done {
+      background: #2e7d32;
+      color: white;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #999;
+      padding-top: 1rem;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .footer a {
+      color: #ff6b35;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 1.5rem;
+      }
+
+      .header h1 {
+        font-size: 1.5rem;
+      }
+
+      .buttons {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>🔧 Setup Firestore</h1>
+    <p>Criar collections automaticamente</p>
+  </div>
+
+  <!-- PASSO 1: Firebase Config -->
+  <div class="step-indicator">
+    <div class="step active">1. Config</div>
+    <div class="step">2. Criar</div>
+    <div class="step">3. Pronto</div>
+  </div>
+
+  <div class="firebase-config">
+    <h3>📋 Passo 1: Sua Config Firebase</h3>
+    <p style="font-size: 0.85rem; color: #666; margin-bottom: 1rem;">
+      Cole sua config do Firebase Console aqui (Project Settings → SDK setup)
+    </p>
+    
+    <input 
+      type="text" 
+      id="apiKey" 
+      class="config-input" 
+      placeholder="apiKey: AIzaSy..."
+    >
+    <input 
+      type="text" 
+      id="authDomain" 
+      class="config-input" 
+      placeholder="authDomain: seu-projeto.firebaseapp.com"
+    >
+    <input 
+      type="text" 
+      id="projectId" 
+      class="config-input" 
+      placeholder="projectId: seu-projeto"
+    >
+    <input 
+      type="text" 
+      id="storageBucket" 
+      class="config-input" 
+      placeholder="storageBucket: seu-projeto.appspot.com"
+    >
+    <input 
+      type="text" 
+      id="messagingSenderId" 
+      class="config-input" 
+      placeholder="messagingSenderId: 123456789"
+    >
+    <input 
+      type="text" 
+      id="appId" 
+      class="config-input" 
+      placeholder="appId: 1:123456789:web:abc123"
+    >
+
+    <button class="btn btn-secondary" onclick="pasteConfig()" style="width: 100%; margin-top: 0.8rem;">
+      📋 Colar Config Completa (JSON)
+    </button>
+  </div>
+
+  <!-- STATUS -->
+  <div id="statusMessage" class="status-message"></div>
+
+  <!-- COLLECTIONS -->
+  <div class="collections">
+    <h3>📦 Passo 2: Collections a Criar</h3>
+    
+    <div class="collection-item">
+      <span class="collection-status">👥</span>
+      <div style="flex: 1;">
+        <div class="collection-name">users</div>
+        <div class="collection-desc">Usuários da plataforma</div>
+      </div>
+      <span id="status-users" style="font-size: 1rem;">⏳</span>
+    </div>
+
+    <div class="collection-item">
+      <span class="collection-status">🏪</span>
+      <div style="flex: 1;">
+        <div class="collection-name">lojas</div>
+        <div class="collection-desc">Lojas criadas pelos usuários</div>
+      </div>
+      <span id="status-lojas" style="font-size: 1rem;">⏳</span>
+    </div>
+
+    <div class="collection-item">
+      <span class="collection-status">🛍️</span>
+      <div style="flex: 1;">
+        <div class="collection-name">produtos</div>
+        <div class="collection-desc">Produtos das lojas</div>
+      </div>
+      <span id="status-produtos" style="font-size: 1rem;">⏳</span>
+    </div>
+
+    <div class="collection-item">
+      <span class="collection-status">📦</span>
+      <div style="flex: 1;">
+        <div class="collection-name">pedidos</div>
+        <div class="collection-desc">Pedidos dos clientes</div>
+      </div>
+      <span id="status-pedidos" style="font-size: 1rem;">⏳</span>
+    </div>
+
+    <div class="collection-item">
+      <span class="collection-status">💳</span>
+      <div style="flex: 1;">
+        <div class="collection-name">invoices</div>
+        <div class="collection-desc">Faturas e assinaturas</div>
+      </div>
+      <span id="status-invoices" style="font-size: 1rem;">⏳</span>
+    </div>
+  </div>
+
+  <!-- REGRAS FIRESTORE -->
+  <div class="rules-section">
+    <h4>🔒 Próximo Passo: Copiar Regras de Segurança</h4>
+    <p>Após criar as collections, você vai precisar copiar as regras de segurança no Firebase Console.</p>
+    
+    <div class="rules-code" id="rulesCode">
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth.uid == userId;
+    }
+    
+    match /lojas/{lojaId} {
+      allow read, write: if request.auth.uid == get(/databases/$(database)/documents/lojas/$(lojaId)).data.uid_owner;
+    }
+    
+    match /produtos/{produtoId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    match /pedidos/{pedidoId} {
+      allow read: if request.auth.uid == resource.data.uid_owner;
+      allow create: if request.auth != null;
+    }
+    
+    match /invoices/{invoiceId} {
+      allow read: if request.auth.uid == resource.data.uid_user;
+    }
+  }
+}
+    </div>
+    
+    <button class="copy-btn" onclick="copyRules()">📋 Copiar Regras</button>
+  </div>
+
+  <!-- BOTÕES -->
+  <div class="buttons">
+    <button class="btn btn-primary" id="createBtn" onclick="createCollections()">
+      ✨ Criar Collections
+    </button>
+    <button class="btn btn-secondary" onclick="resetForm()">
+      🔄 Limpar
+    </button>
+  </div>
+
+  <!-- INSTRUÇÕES -->
+  <div style="background: #f8f9fa; padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
+    <h4 style="font-size: 0.9rem; margin-bottom: 0.8rem; color: #333;">📖 Como Usar:</h4>
+    <ol style="font-size: 0.85rem; color: #666; line-height: 1.6; padding-left: 1.5rem;">
+      <li>Abra Firebase Console → Project Settings</li>
+      <li>Copie sua config (todos os 6 campos)</li>
+      <li>Cole aqui (ou clique em "Colar Config Completa")</li>
+      <li>Clique em "Criar Collections"</li>
+      <li>Aguarde confirmar ✓ todas</li>
+      <li>Copie e aplique as Regras de Segurança</li>
+    </ol>
+  </div>
+
+  <div class="footer">
+    Precisa de ajuda? Consulte <a href="#" onclick="showHelp()">DEPLOY_ONLINE.md</a><br>
+    ❤️ Desenvolvido para MercadoHub
+  </div>
+</div>
+
+<script>
+  // Config Firebase (será preenchido pelo usuário)
+  let firebaseConfig = null;
+  let db = null;
+
+  // Colar config do JSON
+  function pasteConfig() {
+    const json = prompt('Cole sua config Firebase (JSON completo):');
+    if (!json) return;
+
+    try {
+      const config = JSON.parse(json);
+      document.getElementById('apiKey').value = config.apiKey || '';
+      document.getElementById('authDomain').value = config.authDomain || '';
+      document.getElementById('projectId').value = config.projectId || '';
+      document.getElementById('storageBucket').value = config.storageBucket || '';
+      document.getElementById('messagingSenderId').value = config.messagingSenderId || '';
+      document.getElementById('appId').value = config.appId || '';
+      
+      showStatus('✅ Config colada com sucesso!', 'success');
+    } catch (e) {
+      showStatus('❌ JSON inválido. Tente novamente.', 'error');
+    }
+  }
+
+  // Buscar config dos inputs
+  function getConfigFromInputs() {
+    return {
+      apiKey: document.getElementById('apiKey').value,
+      authDomain: document.getElementById('authDomain').value,
+      projectId: document.getElementById('projectId').value,
+      storageBucket: document.getElementById('storageBucket').value,
+      messagingSenderId: document.getElementById('messagingSenderId').value,
+      appId: document.getElementById('appId').value
+    };
+  }
+
+  // Criar collections
+  async function createCollections() {
+    firebaseConfig = getConfigFromInputs();
+
+    // Validar config
+    if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+      showStatus('❌ Preencha todos os campos da config!', 'error');
+      return;
+    }
+
+    // Inicializar Firebase
+    try {
+      const app = firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore(app);
+      
+      showStatus('⏳ Criando collections...', 'loading');
+      document.getElementById('createBtn').disabled = true;
+
+      // Criar documento exemplo em cada collection
+      const collections = [
+        {
+          name: 'users',
+          doc: {
+            email: 'exemplo@teste.com',
+            nome: 'Exemplo Usuário',
+            plano: 'starter',
+            lojas: [],
+            status: 'ativo'
+          }
+        },
+        {
+          name: 'lojas',
+          doc: {
+            nome: 'Loja Exemplo',
+            slug: 'loja-exemplo',
+            uid_owner: 'user123',
+            status: 'ativo',
+            produtosCount: 0
+          }
+        },
+        {
+          name: 'produtos',
+          doc: {
+            nome: 'Produto Exemplo',
+            loja_id: 'loja123',
+            preco: 99.90,
+            categoria: 'Exemplo',
+            estoque: 10
+          }
+        },
+        {
+          name: 'pedidos',
+          doc: {
+            loja_id: 'loja123',
+            cliente: 'Cliente Exemplo',
+            total: 99.90,
+            status: 'novo'
+          }
+        },
+        {
+          name: 'invoices',
+          doc: {
+            uid_user: 'user123',
+            plano: 'starter',
+            valor: 99.00,
+            status: 'pago'
+          }
+        }
+      ];
+
+      // Criar cada collection
+      for (const col of collections) {
+        try {
+          // Adicionar documento exemplo
+          await db.collection(col.name).add(col.doc);
+          updateStatus(col.name, 'done');
+          console.log(`✅ ${col.name} criada!`);
+        } catch (err) {
+          console.error(`Erro ao criar ${col.name}:`, err);
+          updateStatus(col.name, 'error');
+        }
+      }
+
+      showStatus('✅ Collections criadas com sucesso! Próximo passo: aplicar regras de segurança.', 'success');
+      
+      // Mostrar próximos passos
+      setTimeout(() => {
+        showNextSteps();
+      }, 1500);
+
+    } catch (err) {
+      console.error('Erro Firebase:', err);
+      showStatus(`❌ Erro: ${err.message}`, 'error');
+      document.getElementById('createBtn').disabled = false;
+    }
+  }
+
+  // Atualizar status das collections
+  function updateStatus(collection, status) {
+    const statusEl = document.getElementById(`status-${collection}`);
+    if (status === 'done') {
+      statusEl.textContent = '✅';
+      statusEl.style.color = '#2e7d32';
+    } else if (status === 'error') {
+      statusEl.textContent = '❌';
+      statusEl.style.color = '#d32f2f';
+    }
+  }
+
+  // Mostrar mensagem de status
+  function showStatus(msg, type) {
+    const el = document.getElementById('statusMessage');
+    el.textContent = msg;
+    el.className = `status-message show ${type}`;
+  }
+
+  // Próximos passos
+  function showNextSteps() {
+    alert(`✅ Collections criadas com sucesso!
+
+Próximas ações:
+1. Copie as regras de segurança (botão abaixo)
+2. Vá em Firebase Console → Firestore → Rules
+3. Cole as regras
+4. Clique "Publish"
+5. Seu SaaS está pronto!`);
+  }
+
+  // Copiar regras
+  function copyRules() {
+    const rulesCode = document.getElementById('rulesCode').textContent;
+    navigator.clipboard.writeText(rulesCode).then(() => {
+      alert('✅ Regras copiadas! Cole em Firebase Console → Firestore → Rules');
+    });
+  }
+
+  // Resetar formulário
+  function resetForm() {
+    document.getElementById('apiKey').value = '';
+    document.getElementById('authDomain').value = '';
+    document.getElementById('projectId').value = '';
+    document.getElementById('storageBucket').value = '';
+    document.getElementById('messagingSenderId').value = '';
+    document.getElementById('appId').value = '';
+    document.getElementById('statusMessage').classList.remove('show');
+    document.getElementById('createBtn').disabled = false;
+    
+    // Resetar status das collections
+    ['users', 'lojas', 'produtos', 'pedidos', 'invoices'].forEach(col => {
+      document.getElementById(`status-${col}`).textContent = '⏳';
+      document.getElementById(`status-${col}`).style.color = '#999';
+    });
+  }
+
+  // Mostrar ajuda
+  function showHelp() {
+    alert(`Como obter sua config Firebase:
+
+1. Acesse Firebase Console
+2. Selecione seu projeto
+3. Clique na engrenagem (Project Settings)
+4. Role até "SDK setup and configuration"
+5. Selecione o guia "NPM"
+6. Copie o objeto firebaseConfig
+7. Cole aqui (clique em "Colar Config Completa")
+
+Pronto! Suas collections serão criadas automaticamente.`);
+  }
+</script>
+
+</body>
+</html>
