@@ -506,6 +506,10 @@
     try {
       // Fazer login
       const userCredential = await auth.signInWithEmailAndPassword(email, password);
+      // ← ADICIONE ISTO:
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    // ← Aguarda 1 segundo para Firestore conectar
+      
       console.log("✅ Login realizado:", userCredential.user.uid);
 
       // Buscar primeira loja do usuário
