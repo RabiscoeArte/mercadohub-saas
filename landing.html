@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MercadoHub - Plataforma SaaS para criar lojas online sem complicação">
+  <title>MercadoHub - Sua loja online em 5 minutos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      color: #1a1a1a;
+      background: #ffffff;
+      overflow-x: hidden;
+    }
+
+    /* ===== CSS VARIABLES ===== */
+    :root {
+      --primary: #ff6b35;
+      --primary-dark: #d84315;
+      --primary-light: #ffb088;
+      --secondary: #004e89;
+      --secondary-light: #1982c4;
+      --success: #06d6a0;
+      --text-dark: #1a1a1a;
+      --text-light: #666;
+      --bg-light: #f8f9fa;
+      --border: #e0e0e0;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      position: sticky;
+      top: 0;
+      background: white;
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.2rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -1px;
+    }
+
+    nav {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    nav a {
+      color: var(--text-dark);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    nav a:hover {
+      color: var(--primary);
+    }
+
+    .btn-header {
+      background: var(--primary);
+      color: white;
+      padding: 0.7rem 1.5rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-header:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(255, 107, 53, 0.3);
+    }
+
+    /* ===== HERO ===== */
+    .hero {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 4rem 2rem;
+      text-align: center;
+      animation: fadeInDown 0.8s ease;
+    }
+
+    .hero h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+      color: var(--text-dark);
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.3rem;
+      color: var(--text-light);
+      margin-bottom: 2rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.3s;
+      box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 15px 40px rgba(255, 107, 53, 0.4);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--primary);
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      border: 2px solid var(--primary);
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+
+    .btn-secondary:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    .hero-image {
+      margin-top: 2rem;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+      animation: slideInUp 0.8s ease;
+    }
+
+    .hero-image img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* ===== FEATURES ===== */
+    .features {
+      padding: 5rem 2rem;
+      background: linear-gradient(135deg, rgba(255, 107, 53, 0.05), rgba(0, 78, 137, 0.05));
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .section-title h2 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .section-title p {
+      font-size: 1.1rem;
+      color: var(--text-light);
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .features-grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      transition: all 0.3s;
+      animation: fadeInUp 0.6s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+      border-color: var(--primary);
+    }
+
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .feature-card h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.3rem;
+      margin-bottom: 0.8rem;
+      color: var(--text-dark);
+    }
+
+    .feature-card p {
+      color: var(--text-light);
+      line-height: 1.6;
+    }
+
+    /* ===== PRICING ===== */
+    .pricing {
+      padding: 5rem 2rem;
+      background: white;
+    }
+
+    .pricing-cards {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+
+    .pricing-card {
+      background: white;
+      border: 2px solid var(--border);
+      border-radius: 15px;
+      padding: 2.5rem;
+      text-align: center;
+      transition: all 0.3s;
+      position: relative;
+      animation: fadeInUp 0.6s ease;
+    }
+
+    .pricing-card.featured {
+      border-color: var(--primary);
+      box-shadow: 0 20px 50px rgba(255, 107, 53, 0.2);
+      transform: scale(1.05);
+    }
+
+    .pricing-card:hover {
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .plan-name {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .plan-price {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .plan-price span {
+      font-size: 1rem;
+      color: var(--text-light);
+      font-weight: 500;
+    }
+
+    .plan-description {
+      color: var(--text-light);
+      margin-bottom: 2rem;
+      font-size: 0.95rem;
+    }
+
+    .features-list {
+      text-align: left;
+      margin: 2rem 0;
+      list-style: none;
+    }
+
+    .features-list li {
+      padding: 0.7rem 0;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-dark);
+      font-size: 0.95rem;
+    }
+
+    .features-list li:last-child {
+      border-bottom: none;
+    }
+
+    .features-list li.included::before {
+      content: "✓ ";
+      color: var(--success);
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+
+    .features-list li.excluded {
+      color: var(--text-light);
+      opacity: 0.6;
+    }
+
+    .features-list li.excluded::before {
+      content: "✗ ";
+      color: #ccc;
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+
+    .btn-plan {
+      width: 100%;
+      padding: 1rem;
+      border-radius: 10px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 1.5rem;
+    }
+
+    .btn-plan.primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+    }
+
+    .btn-plan.primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
+    }
+
+    .btn-plan.secondary {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+
+    .btn-plan.secondary:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* ===== FAQ ===== */
+    .faq {
+      padding: 5rem 2rem;
+      background: linear-gradient(135deg, rgba(255, 107, 53, 0.05), rgba(0, 78, 137, 0.05));
+    }
+
+    .faq-container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .faq-item {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      animation: fadeInUp 0.6s ease;
+    }
+
+    .faq-question {
+      padding: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+
+    .faq-question:hover {
+      background: var(--bg-light);
+    }
+
+    .faq-icon {
+      font-size: 1.5rem;
+      transition: transform 0.3s;
+    }
+
+    .faq-item.active .faq-icon {
+      transform: rotate(180deg);
+    }
+
+    .faq-answer {
+      padding: 0 1.5rem;
+      max-height: 0;
+      overflow: hidden;
+      transition: all 0.3s;
+      color: var(--text-light);
+    }
+
+    .faq-item.active .faq-answer {
+      padding: 0 1.5rem 1.5rem;
+      max-height: 500px;
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      background: var(--text-dark);
+      color: white;
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .footer-links {
+      margin-bottom: 2rem;
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: #ccc;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .footer-links a:hover {
+      color: var(--primary);
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .hero p {
+        font-size: 1rem;
+      }
+
+      nav {
+        gap: 1rem;
+        font-size: 0.9rem;
+      }
+
+      .pricing-card.featured {
+        transform: scale(1);
+      }
+
+      .cta-buttons {
+        flex-direction: column;
+      }
+
+      .btn-primary, .btn-secondary {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-content">
+    <div class="logo">🏪 MercadoHub</div>
+    <nav>
+      <a href="#features">Recursos</a>
+      <a href="#pricing">Preços</a>
+      <a href="#faq">FAQ</a>
+      <button class="btn-header" onclick="redirectToDashboard()">Entrar</button>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <h1>Sua loja online em <span>5 minutos</span></h1>
+  <p>Plataforma SaaS completa para criar, gerenciar e escalar sua loja virtual. Sem código. Sem complicação.</p>
+  
+  <div class="cta-buttons">
+    <button class="btn-primary" onclick="redirectToRegister()">🚀 Começar Grátis</button>
+    <button class="btn-secondary" onclick="alert('Agende uma demonstração')">📅 Ver Demo</button>
+  </div>
+
+  <div class="hero-image">
+    <svg width="100%" height="400" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#ff6b35;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#d84315;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      
+      <!-- Desktop mockup -->
+      <rect x="50" y="30" width="500" height="320" rx="20" fill="white" stroke="#e0e0e0" stroke-width="2"/>
+      
+      <!-- Header dashboard -->
+      <rect x="50" y="30" width="500" height="60" rx="20" fill="url(#grad1)" />
+      <text x="70" y="65" font-size="16" font-weight="bold" fill="white">Dashboard</text>
+      
+      <!-- Cards de estatísticas -->
+      <g>
+        <rect x="70" y="110" width="140" height="80" rx="10" fill="#f8f9fa" stroke="#e0e0e0" stroke-width="1"/>
+        <text x="85" y="135" font-size="12" fill="#666">Vendas Hoje</text>
+        <text x="85" y="160" font-size="20" font-weight="bold" fill="#ff6b35">R$ 1.250</text>
+        
+        <rect x="230" y="110" width="140" height="80" rx="10" fill="#f8f9fa" stroke="#e0e0e0" stroke-width="1"/>
+        <text x="245" y="135" font-size="12" fill="#666">Pedidos</text>
+        <text x="245" y="160" font-size="20" font-weight="bold" fill="#ff6b35">24</text>
+        
+        <rect x="390" y="110" width="140" height="80" rx="10" fill="#f8f9fa" stroke="#e0e0e0" stroke-width="1"/>
+        <text x="405" y="135" font-size="12" fill="#666">Visitantes</text>
+        <text x="405" y="160" font-size="20" font-weight="bold" fill="#ff6b35">892</text>
+      </g>
+      
+      <!-- Products list -->
+      <g>
+        <rect x="70" y="210" width="460" height="130" rx="10" fill="#f8f9fa" stroke="#e0e0e0" stroke-width="1"/>
+        <text x="85" y="235" font-size="14" font-weight="bold" fill="#1a1a1a">Produtos Mais Vendidos</text>
+        
+        <line x1="85" y1="245" x2="525" y2="245" stroke="#e0e0e0" stroke-width="1"/>
+        
+        <text x="85" y="270" font-size="12" fill="#1a1a1a">📦 Camiseta Azul</text>
+        <text x="400" y="270" font-size="12" font-weight="bold" fill="#ff6b35">127 vendas</text>
+        
+        <text x="85" y="295" font-size="12" fill="#1a1a1a">📦 Calça Jeans</text>
+        <text x="400" y="295" font-size="12" font-weight="bold" fill="#ff6b35">94 vendas</text>
+        
+        <text x="85" y="320" font-size="12" fill="#1a1a1a">📦 Meia Premium</text>
+        <text x="400" y="320" font-size="12" font-weight="bold" fill="#ff6b35">67 vendas</text>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="section-title">
+    <h2>Tudo que você precisa para vender</h2>
+    <p>Uma plataforma completa e intuitiva para gerenciar sua loja online</p>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <h3>Dashboard Inteligente</h3>
+      <p>Visualize vendas, pedidos e métricas em tempo real. Tome decisões baseadas em dados.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🛍️</div>
+      <h3>Catálogo Flexível</h3>
+      <p>Gerencie milhares de produtos com categorias, variações e promoções ilimitadas.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">💬</div>
+      <h3>WhatsApp Integrado</h3>
+      <p>Receba pedidos direto no WhatsApp. Comunique-se com clientes em tempo real.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🎯</div>
+      <h3>Marketing Tools</h3>
+      <p>Crie promoções, cupons e campanhas que aumentam sua taxa de conversão.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">📱</div>
+      <h3>Loja Mobile-First</h3>
+      <p>Sua loja funciona perfeitamente em todos os dispositivos. Otimizada para vender.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🔒</div>
+      <h3>Segurança Total</h3>
+      <p>SSL, backup automático e conformidade com LGPD. Seus dados estão seguros.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🌐</div>
+      <h3>Domínio Customizado</h3>
+      <p>Use seu próprio domínio ou subdomínio. Builds sua marca profissionalmente.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <h3>Super Rápido</h3>
+      <p>Velocidade otimizada. Seus clientes carregam produtos em milissegundos.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🚀</div>
+      <h3>Escalável</h3>
+      <p>Cresci de 10 para 10 mil pedidos por mês sem preocupações de infraestrutura.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="section-title">
+    <h2>Planos Simples e Transparentes</h2>
+    <p>Escolha o plano perfeito para seu negócio. Sem surpresas, sem taxas ocultas.</p>
+  </div>
+
+  <div class="pricing-cards">
+    <!-- PLANO BASE -->
+    <div class="pricing-card">
+      <div class="plan-name">🌱 Starter</div>
+      <div class="plan-price">R$ 99<span>/mês</span></div>
+      <div class="plan-description">Perfeito para começar</div>
+      
+      <ul class="features-list">
+        <li class="included">1 Loja</li>
+        <li class="included">Até 100 Produtos</li>
+        <li class="included">Painel Administrativo</li>
+        <li class="included">Integração WhatsApp</li>
+        <li class="included">Dashboard Básico</li>
+        <li class="excluded">Múltiplas Lojas</li>
+        <li class="excluded">Relatórios Avançados</li>
+        <li class="excluded">API Customizada</li>
+      </ul>
+      
+      <button class="btn-plan secondary" onclick="selectPlan('starter')">Começar Agora</button>
+    </div>
+
+    <!-- PLANO PRO -->
+    <div class="pricing-card featured">
+      <div class="badge">🔥 Mais Popular</div>
+      <div class="plan-name">⭐ Pro</div>
+      <div class="plan-price">R$ 199<span>/mês</span></div>
+      <div class="plan-description">Para crescer seu negócio</div>
+      
+      <ul class="features-list">
+        <li class="included">Até 3 Lojas</li>
+        <li class="included">Até 500 Produtos/Loja</li>
+        <li class="included">Tudo do Starter</li>
+        <li class="included">Relatórios Mensais</li>
+        <li class="included">Suporte por Email</li>
+        <li class="included">Analytics Avançado</li>
+        <li class="excluded">API Customizada</li>
+        <li class="excluded">Webhook Customizado</li>
+      </ul>
+      
+      <button class="btn-plan primary" onclick="selectPlan('pro')">Começar Grátis por 7 dias</button>
+    </div>
+
+    <!-- PLANO PREMIUM -->
+    <div class="pricing-card">
+      <div class="plan-name">💎 Premium</div>
+      <div class="plan-price">R$ 499<span>/mês</span></div>
+      <div class="plan-description">Para empresas em escala</div>
+      
+      <ul class="features-list">
+        <li class="included">Lojas Ilimitadas</li>
+        <li class="included">Produtos Ilimitados</li>
+        <li class="included">Tudo do Pro</li>
+        <li class="included">API REST Customizada</li>
+        <li class="included">Webhooks Customizados</li>
+        <li class="included">Suporte 24/7 Prioritário</li>
+        <li class="included">Consultoria de Negócio</li>
+        <li class="included">Integração Marketplaces</li>
+      </ul>
+      
+      <button class="btn-plan secondary" onclick="selectPlan('premium')">Falar com Vendedor</button>
+    </div>
+  </div>
+
+  <!-- EXTRAS -->
+  <div style="max-width: 1200px; margin: 3rem auto; padding: 2rem; background: #f8f9fa; border-radius: 15px; text-align: center;">
+    <h3 style="margin-bottom: 1rem;">Precisa de mais?</h3>
+    <p style="color: #666; margin-bottom: 1.5rem;">Adicione funcionalidades extras conforme crescer</p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+      <div style="background: white; padding: 1.5rem; border-radius: 10px; border: 1px solid #e0e0e0;">
+        <div style="font-weight: bold; color: var(--primary); margin-bottom: 0.5rem;">+R$ 0,99</div>
+        <div>Por produto extra (acima do limite do plano)</div>
+      </div>
+      <div style="background: white; padding: 1.5rem; border-radius: 10px; border: 1px solid #e0e0e0;">
+        <div style="font-weight: bold; color: var(--primary); margin-bottom: 0.5rem;">+R$ 49</div>
+        <div>Por loja adicional (acima do limite do plano)</div>
+      </div>
+      <div style="background: white; padding: 1.5rem; border-radius: 10px; border: 1px solid #e0e0e0;">
+        <div style="font-weight: bold; color: var(--primary); margin-bottom: 0.5rem;">+R$ 29</div>
+        <div>Domínio customizado + email profissional</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+  <div class="section-title">
+    <h2>Perguntas Frequentes</h2>
+    <p>Tire suas dúvidas sobre a plataforma</p>
+  </div>
+
+  <div class="faq-container">
+    <div class="faq-item active">
+      <div class="faq-question">
+        <span>Como funciona o período de teste?</span>
+        <span class="faq-icon">▼</span>
+      </div>
+      <div class="faq-answer">
+        <p>Você tem 7 dias grátis para testar qualquer plano. Sem necessidade de cartão de crédito. Após os 7 dias, sua assinatura é ativada e você pode cancelar a qualquer momento.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">
+        <span>Posso cancelar minha assinatura?</span>
+        <span class="faq-icon">▼</span>
+      </div>
+      <div class="faq-answer">
+        <p>Sim! Você pode cancelar sua assinatura a qualquer momento, sem penalidade. Sua loja continuará ativa até o final do período pago.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">
+        <span>Há taxa de transação nos pedidos?</span>
+        <span class="faq-icon">▼</span>
+      </div>
+      <div class="faq-answer">
+        <p>Não! O MercadoHub não cobra taxa de transação. Você paga apenas a assinatura mensal. Todo o dinheiro dos seus clientes vai direto para você.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">
+        <span>Como intego meios de pagamento?</span>
+        <span class="faq-icon">▼</span>
+      </div>
+      <div class="faq-answer">
+        <p>Atualmente oferecemos integração com WhatsApp para pedidos. Você coordena pagamentos via PIX, dinheiro ou cartão com seus clientes. Em breve: Stripe, Mercado Pago e PayPal.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">
+        <span>Vocês fazem backup dos meus dados?</span>
+        <span class="faq-icon">▼</span>
+      </div>
+      <div class="faq-answer">
+        <p>Sim! Fazemos backup automático diariamente na nuvem. Você também pode exportar todos seus dados a qualquer momento em formato CSV.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question">
+        <span>Como funciona o suporte?</span>
+        <span class="faq-icon">▼</span>
+      </div>
+      <div class="faq-answer">
+        <p>Oferecemos suporte por email para todos os planos. Clientes Premium têm suporte 24/7 via WhatsApp e telefone com prioridade.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section style="padding: 4rem 2rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; text-align: center;">
+  <div style="max-width: 800px; margin: 0 auto;">
+    <h2 style="font-family: 'Poppins', sans-serif; font-size: 2.2rem; margin-bottom: 1rem;">Pronto para começar?</h2>
+    <p style="font-size: 1.1rem; margin-bottom: 2rem; opacity: 0.95;">Crie sua loja agora. 7 dias grátis. Sem cartão de crédito.</p>
+    <button class="btn-primary" onclick="redirectToRegister()">🚀 Criar Loja Agora</button>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-content">
+    <div class="footer-links">
+      <a href="#">Termos de Serviço</a>
+      <a href="#">Privacidade</a>
+      <a href="#">Blog</a>
+      <a href="#">Contato</a>
+      <a href="#">Status</a>
+    </div>
+    <p>&copy; 2024 MercadoHub. Todos os direitos reservados. | Made with ❤️ no Brasil</p>
+  </div>
+</footer>
+
+<script>
+  // FAQ Toggle
+  document.querySelectorAll('.faq-question').forEach(question => {
+    question.addEventListener('click', function() {
+      const item = this.closest('.faq-item');
+      item.classList.toggle('active');
+    });
+  });
+
+  // Placeholder functions - replace with real auth
+  function redirectToRegister() {
+    window.location.href = '/register.html';
+  }
+
+  function redirectToDashboard() {
+    window.location.href = '/dashboard.html';
+  }
+
+  function selectPlan(plan) {
+    console.log('Plano selecionado:', plan);
+    redirectToRegister();
+  }
+
+  // Smooth scroll
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faturamento - MercadoHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f8f9fa;
+      color: #333;
+    }
+
+    /* HEADER */
+    .header {
+      background: white;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ff6b35, #004e89);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .logout-btn {
+      background: #ff6b35;
+      color: white;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .logout-btn:hover {
+      background: #d84315;
+    }
+
+    /* CONTAINER */
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .page-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    /* CURRENT PLAN */
+    .current-plan {
+      background: linear-gradient(135deg, #ff6b35, #d84315);
+      color: white;
+      padding: 2rem;
+      border-radius: 15px;
+      margin-bottom: 2rem;
+    }
+
+    .plan-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .plan-details h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+    }
+
+    .plan-detail {
+      margin-bottom: 0.8rem;
+      font-size: 0.95rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .plan-detail strong {
+      min-width: 150px;
+    }
+
+    .plan-price {
+      font-size: 2.5rem;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .plan-price small {
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+
+    .plan-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .btn {
+      padding: 0.9rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 0.95rem;
+    }
+
+    .btn-primary {
+      background: white;
+      color: #ff6b35;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid white;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* TABS */
+    .tabs {
+      display: flex;
+      gap: 1rem;
+      border-bottom: 2px solid #e0e0e0;
+      margin-bottom: 2rem;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      padding: 1rem 1.5rem;
+      font-weight: 600;
+      color: #999;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .tab-btn.active {
+      color: #ff6b35;
+      border-bottom-color: #ff6b35;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* PRICING CARDS */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .pricing-card {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      transition: all 0.3s;
+      position: relative;
+    }
+
+    .pricing-card.featured {
+      border-color: #ff6b35;
+      box-shadow: 0 8px 24px rgba(255,107,53,0.2);
+      transform: scale(1.05);
+    }
+
+    .pricing-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #ff6b35, #d84315);
+      color: white;
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .plan-name {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin: 1rem 0;
+    }
+
+    .plan-price {
+      font-size: 2rem;
+      color: #ff6b35;
+      margin-bottom: 0.5rem;
+    }
+
+    .plan-price span {
+      font-size: 1rem;
+      color: #999;
+      font-weight: 400;
+    }
+
+    .plan-features {
+      text-align: left;
+      margin: 1.5rem 0;
+      list-style: none;
+    }
+
+    .plan-features li {
+      padding: 0.6rem 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 0.9rem;
+    }
+
+    .plan-features li::before {
+      content: "✓ ";
+      color: #2e7d32;
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+
+    .upgrade-btn {
+      width: 100%;
+      padding: 0.9rem;
+      background: linear-gradient(135deg, #ff6b35, #d84315);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1.5rem;
+      transition: all 0.3s;
+    }
+
+    .upgrade-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255,107,53,0.3);
+    }
+
+    .upgrade-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* INVOICES */
+    .invoices-list {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+    }
+
+    .invoice-item {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 1.5rem;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .invoice-item:last-child {
+      border-bottom: none;
+    }
+
+    .invoice-date {
+      font-weight: 600;
+    }
+
+    .invoice-plan {
+      color: #ff6b35;
+      font-weight: 600;
+    }
+
+    .invoice-amount {
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .invoice-btn {
+      background: #f0f0f0;
+      color: #333;
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .invoice-btn:hover {
+      background: #e0e0e0;
+    }
+
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 2rem;
+      background: white;
+      border-radius: 12px;
+      color: #999;
+    }
+
+    .empty-state h3 {
+      color: #666;
+      margin-bottom: 1rem;
+    }
+
+    /* LOADING */
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #999;
+    }
+
+    .spinner {
+      border: 3px solid #f0f0f0;
+      border-top: 3px solid #ff6b35;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* MODAL */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      max-width: 500px;
+      width: 90%;
+    }
+
+    .modal-header {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .pricing-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .pricing-card.featured {
+        transform: scale(1);
+      }
+
+      .invoice-item {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+
+      .plan-info {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">💳 MercadoHub Faturamento</div>
+  <button class="logout-btn" onclick="logout()">Sair</button>
+</div>
+
+<!-- CONTAINER -->
+<div class="container">
+  <h1 class="page-title">Gerenciamento de Plano</h1>
+
+  <!-- PLANO ATUAL -->
+  <div class="current-plan">
+    <div class="plan-info">
+      <div class="plan-details">
+        <h3 id="currentPlanName">Carregando...</h3>
+        <div class="plan-detail">
+          <strong>Status:</strong>
+          <span id="planStatus">Ativo</span>
+        </div>
+        <div class="plan-detail">
+          <strong>Próxima cobrança:</strong>
+          <span id="nextBilling">--/--/--</span>
+        </div>
+        <div class="plan-detail">
+          <strong>Lojas:</strong>
+          <span id="lojaCount">1/1</span>
+        </div>
+        <div class="plan-detail">
+          <strong>Produtos:</strong>
+          <span id="prodCount">--/--</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="plan-price">
+          R$ <span id="planValue">99</span>
+          <small>/mês</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="plan-actions">
+      <button class="btn btn-primary" onclick="showPlans()">📈 Upgrade / Downgrade</button>
+      <button class="btn btn-secondary" onclick="cancelPlan()">❌ Cancelar Plano</button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('plans')">Planos</button>
+    <button class="tab-btn" onclick="switchTab('invoices')">Faturas</button>
+    <button class="tab-btn" onclick="switchTab('usage')">Uso</button>
+  </div>
+
+  <!-- TAB: PLANS -->
+  <div id="tab-plans" class="tab-content active">
+    <div class="pricing-grid" id="plansGrid">
+      <div class="loading"><div class="spinner"></div>Carregando planos...</div>
+    </div>
+  </div>
+
+  <!-- TAB: INVOICES -->
+  <div id="tab-invoices" class="tab-content">
+    <div class="invoices-list" id="invoicesList">
+      <div class="loading"><div class="spinner"></div>Carregando faturas...</div>
+    </div>
+  </div>
+
+  <!-- TAB: USAGE -->
+  <div id="tab-usage" class="tab-content">
+    <div style="background: white; padding: 2rem; border-radius: 12px;">
+      <h3 style="margin-bottom: 1.5rem; font-family: 'Poppins', sans-serif;">Uso Atual</h3>
+      
+      <div style="margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+          <span>Lojas criadas:</span>
+          <strong id="usageLojas">0/1</strong>
+        </div>
+        <div style="background: #f0f0f0; height: 8px; border-radius: 4px; overflow: hidden;">
+          <div id="usageLojasBar" style="background: linear-gradient(135deg, #ff6b35, #d84315); height: 100%; width: 0%; transition: width 0.3s;"></div>
+        </div>
+      </div>
+
+      <div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+          <span>Produtos cadastrados:</span>
+          <strong id="usageProd">0/100</strong>
+        </div>
+        <div style="background: #f0f0f0; height: 8px; border-radius: 4px; overflow: hidden;">
+          <div id="usageProdBar" style="background: linear-gradient(135deg, #004e89, #001f3f); height: 100%; width: 0%; transition: width 0.3s;"></div>
+        </div>
+      </div>
+
+      <div style="margin-top: 2rem; padding: 1.5rem; background: #fff3e0; border-radius: 8px; border-left: 4px solid #ff6b35;">
+        <strong style="color: #e65100;">💡 Dica:</strong>
+        <p style="color: #e65100; font-size: 0.9rem; margin-top: 0.5rem;">
+          Produtos extras custam R$ 0,99 cada. Lojas extras custam R$ 49.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PLANOS -->
+<div id="plansModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">Escolha seu Plano</div>
+    <div id="modalPlansGrid"></div>
+  </div>
+</div>
+
+<script>
+  // ===== FIREBASE CONFIG =====
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "seu-projeto.firebaseapp.com",
+    projectId: "seu-projeto",
+    storageBucket: "seu-projeto.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:abc123def456"
+  };
+
+  const app = firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  let currentUser = null;
+  let userData = null;
+
+  // ===== INIT =====
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+      window.location.href = '/auth.html';
+      return;
+    }
+
+    currentUser = user;
+    const userDoc = await db.collection('users').doc(user.uid).get();
+    
+    if (userDoc.exists) {
+      userData = userDoc.data();
+      loadCurrentPlan();
+      loadPlans();
+      loadInvoices();
+      loadUsage();
+    }
+  });
+
+  async function loadCurrentPlan() {
+    const planoMap = {
+      'starter': { name: '🌱 Starter', price: 99, lojas: 1, produtos: 100 },
+      'pro': { name: '⭐ Pro', price: 199, lojas: 3, produtos: 500 },
+      'premium': { name: '💎 Premium', price: 499, lojas: null, produtos: null }
+    };
+
+    const plan = planoMap[userData.plano] || planoMap['starter'];
+    
+    document.getElementById('currentPlanName').textContent = plan.name;
+    document.getElementById('planValue').textContent = plan.price;
+    document.getElementById('lojaCount').textContent = userData.lojas?.length + '/' + (plan.lojas || '∞');
+    
+    // Contar produtos
+    const prodsSnapshot = await db.collection('produtos')
+      .where('loja_id', 'in', userData.lojas || [])
+      .get();
+    
+    document.getElementById('prodCount').textContent = prodsSnapshot.size + '/' + (plan.produtos || '∞');
+
+    // Data próxima cobrança (assumir 30 dias depois do registro)
+    if (userData.dataRegistro) {
+      const nextDate = new Date(userData.dataRegistro.toDate());
+      nextDate.setMonth(nextDate.getMonth() + 1);
+      document.getElementById('nextBilling').textContent = nextDate.toLocaleDateString('pt-BR');
+    }
+  }
+
+  function loadPlans() {
+    const plans = [
+      {
+        id: 'starter',
+        name: '🌱 Starter',
+        price: 99,
+        features: ['1 loja', '100 produtos', 'Painel admin', 'WhatsApp', 'Básico'],
+        current: userData.plano === 'starter'
+      },
+      {
+        id: 'pro',
+        name: '⭐ Pro',
+        price: 199,
+        features: ['3 lojas', '500 produtos', 'Relatórios', 'Analytics', 'Suporte email'],
+        featured: true,
+        current: userData.plano === 'pro'
+      },
+      {
+        id: 'premium',
+        name: '💎 Premium',
+        price: 499,
+        features: ['Ilimitado', 'Ilimitado', 'API REST', 'Webhooks', 'Suporte 24/7'],
+        current: userData.plano === 'premium'
+      }
+    ];
+
+    const grid = document.getElementById('plansGrid');
+    grid.innerHTML = plans.map(p => `
+      <div class="pricing-card ${p.featured ? 'featured' : ''} ${p.current ? 'current' : ''}">
+        ${p.featured ? '<div class="badge">🔥 Mais Popular</div>' : ''}
+        <div class="plan-name">${p.name}</div>
+        <div class="plan-price">R$ ${p.price}<span>/mês</span></div>
+        <ul class="plan-features">
+          ${p.features.map(f => `<li>${f}</li>`).join('')}
+        </ul>
+        <button class="upgrade-btn" ${p.current ? 'disabled' : ''} onclick="upgradePlan('${p.id}')">
+          ${p.current ? '✓ Plano Atual' : 'Mudar para este plano'}
+        </button>
+      </div>
+    `).join('');
+  }
+
+  function loadInvoices() {
+    const invoicesList = document.getElementById('invoicesList');
+    
+    // Mock data - em produção vir do Stripe/Firestore
+    const invoices = [
+      {
+        date: new Date(),
+        plan: userData.plano,
+        amount: planoMap[userData.plano]?.price || 99,
+        status: 'Pago'
+      }
+    ];
+
+    if (invoices.length === 0) {
+      invoicesList.innerHTML = '<div class="empty-state"><h3>Nenhuma fatura</h3><p>Suas faturas aparecerão aqui</p></div>';
+      return;
+    }
+
+    invoicesList.innerHTML = invoices.map(inv => `
+      <div class="invoice-item">
+        <div class="invoice-date">${inv.date.toLocaleDateString('pt-BR')}</div>
+        <div class="invoice-plan">${inv.plan.toUpperCase()}</div>
+        <div class="invoice-amount">R$ ${inv.amount},00</div>
+        <button class="invoice-btn" onclick="downloadInvoice()">PDF</button>
+      </div>
+    `).join('');
+  }
+
+  async function loadUsage() {
+    const planoLimits = {
+      'starter': { lojas: 1, produtos: 100 },
+      'pro': { lojas: 3, produtos: 500 },
+      'premium': { lojas: 999, produtos: 999999 }
+    };
+
+    const limits = planoLimits[userData.plano];
+    const lojaCount = userData.lojas?.length || 0;
+
+    const prodsSnapshot = await db.collection('produtos')
+      .where('loja_id', 'in', userData.lojas || [])
+      .get();
+    const prodCount = prodsSnapshot.size;
+
+    document.getElementById('usageLojas').textContent = lojaCount + '/' + limits.lojas;
+    document.getElementById('usageLojasBar').style.width = (lojaCount / limits.lojas * 100) + '%';
+
+    document.getElementById('usageProd').textContent = prodCount + '/' + limits.produtos;
+    document.getElementById('usageProdBar').style.width = (prodCount / limits.produtos * 100) + '%';
+  }
+
+  function showPlans() {
+    document.getElementById('plansModal').classList.add('show');
+  }
+
+  function upgradePlan(plano) {
+    alert(`Mudando para plano ${plano}. Em produção: redirecionar para Stripe Checkout`);
+    // window.location.href = `https://checkout.stripe.com/...?plano=${plano}`;
+  }
+
+  function switchTab(tab) {
+    // Hide all
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    
+    // Show selected
+    document.getElementById('tab-' + tab).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function cancelPlan() {
+    if (confirm('Tem certeza que deseja cancelar? Você perderá acesso ao painel.')) {
+      alert('Plano cancelado. Você terá acesso até o final do período pago.');
+      // db.collection('users').doc(currentUser.uid).update({ status: 'cancelado' });
+    }
+  }
+
+  function downloadInvoice() {
+    alert('Gerando PDF da fatura...');
+  }
+
+  function logout() {
+    auth.signOut().then(() => {
+      window.location.href = '/auth.html';
+    });
+  }
+
+  const planoMap = {
+    'starter': { name: '🌱 Starter', price: 99, lojas: 1, produtos: 100 },
+    'pro': { name: '⭐ Pro', price: 199, lojas: 3, produtos: 500 },
+    'premium': { name: '💎 Premium', price: 499, lojas: null, produtos: null }
+  };
+
+  // Fechar modal ao clicar fora
+  document.getElementById('plansModal').addEventListener('click', (e) => {
+    if (e.target.id === 'plansModal') {
+      e.target.classList.remove('show');
+    }
+  });
+</script>
+
+</body>
+</html>
