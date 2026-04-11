@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔧 Diagnóstico MercadoHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<!-- ✅ CORRETO -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f8f9fa;
+      color: #333;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-family: 'Poppins', sans-serif;
+      margin-bottom: 2rem;
+      color: #ff6b35;
+    }
+
+    .test-section {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .test-section h2 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: #333;
+      border-bottom: 2px solid #f0f0f0;
+      padding-bottom: 0.8rem;
+    }
+
+    .test-item {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin-bottom: 0.8rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+    }
+
+    .status-icon {
+      font-size: 1.5rem;
+      margin-right: 1rem;
+      min-width: 30px;
+    }
+
+    .status-text {
+      flex: 1;
+    }
+
+    .status-text strong {
+      display: block;
+      color: #333;
+    }
+
+    .status-text p {
+      color: #666;
+      font-size: 0.85rem;
+      margin-top: 0.3rem;
+    }
+
+    .loading {
+      color: #ff6b35;
+    }
+
+    .success {
+      color: #2e7d32;
+    }
+
+    .error {
+      color: #d32f2f;
+    }
+
+    .warning {
+      color: #f57c00;
+    }
+
+    .console-log {
+      background: #1a1a1a;
+      color: #0f0;
+      padding: 1.5rem;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 1rem;
+      line-height: 1.5;
+    }
+
+    .console-log p {
+      margin: 0.3rem 0;
+    }
+
+    .success-log {
+      color: #0f0;
+    }
+
+    .error-log {
+      color: #f00;
+    }
+
+    .info-log {
+      color: #0ff;
+    }
+
+    button {
+      background: #ff6b35;
+      color: white;
+      border: none;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 1rem;
+    }
+
+    button:hover {
+      background: #d84315;
+    }
+
+    .config-display {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 4px solid #ff6b35;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      word-break: break-all;
+    }
+
+    .help-section {
+      background: #fff3e0;
+      padding: 1.5rem;
+      border-radius: 8px;
+      border-left: 4px solid #ff6b35;
+      margin-top: 2rem;
+    }
+
+    .help-section h3 {
+      color: #e65100;
+      margin-bottom: 1rem;
+    }
+
+    .help-section ul {
+      list-style-position: inside;
+      color: #d84315;
+      line-height: 1.8;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🔧 Diagnóstico MercadoHub</h1>
+
+  <!-- TESTE 1: PÁGINA CARREGA -->
+  <div class="test-section">
+    <h2>1️⃣ Página Carregando</h2>
+    <div class="test-item">
+      <span class="status-icon success">✅</span>
+      <div class="status-text">
+        <strong>Página HTML carregou corretamente</strong>
+        <p>Você está vendo este arquivo = sucesso!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TESTE 2: JAVASCRIPT -->
+  <div class="test-section">
+    <h2>2️⃣ JavaScript Funcionando</h2>
+    <div class="test-item" id="jsTest">
+      <span class="status-icon loading">⏳</span>
+      <div class="status-text">
+        <strong>Testando JavaScript...</strong>
+      </div>
+    </div>
+    <div id="jsOutput"></div>
+  </div>
+
+  <!-- TESTE 3: FIREBASE CONFIG -->
+  <div class="test-section">
+    <h2>3️⃣ Firebase Carregado</h2>
+    <div class="test-item" id="firebaseLoadTest">
+      <span class="status-icon loading">⏳</span>
+      <div class="status-text">
+        <strong>Testando Firebase...</strong>
+      </div>
+    </div>
+    <div id="firebaseOutput"></div>
+  </div>
+
+  <!-- TESTE 4: FIREBASE CONNECTION -->
+  <div class="test-section">
+    <h2>4️⃣ Conexão Firebase</h2>
+    <div class="test-item" id="firebaseConnTest">
+      <span class="status-icon loading">⏳</span>
+      <div class="status-text">
+        <strong>Testando conexão com Firestore...</strong>
+      </div>
+    </div>
+    <div id="firebaseConnOutput"></div>
+    <button onclick="testFirebaseConnection()">🔄 Testar Conexão Agora</button>
+  </div>
+
+  <!-- TESTE 5: AUTH -->
+  <div class="test-section">
+    <h2>5️⃣ Firebase Auth</h2>
+    <div class="test-item" id="authTest">
+      <span class="status-icon loading">⏳</span>
+      <div class="status-text">
+        <strong>Testando Firebase Auth...</strong>
+      </div>
+    </div>
+    <div id="authOutput"></div>
+  </div>
+
+  <!-- TESTE 6: CONSOLE LOG -->
+  <div class="test-section">
+    <h2>6️⃣ Console Log (Erros Capturados)</h2>
+    <div class="console-log" id="consoleLogs"></div>
+  </div>
+
+  <!-- HELP -->
+  <div class="help-section">
+    <h3>📋 Como Usar Este Diagnóstico</h3>
+    <ul>
+      <li>✅ Verde = funcionando perfeitamente</li>
+      <li>⏳ Amarelo = testando/carregando</li>
+      <li>❌ Vermelho = erro encontrado</li>
+      <li>Scroll no console abaixo para ver erros detalhados</li>
+      <li>Se algum teste falhar, envie a mensagem de erro</li>
+    </ul>
+  </div>
+
+  <!-- RESUMO -->
+  <div class="test-section" id="summary" style="display:none;">
+    <h2>📊 Resumo do Diagnóstico</h2>
+    <div id="summaryContent"></div>
+  </div>
+</div>
+
+<script>
+  // Capturar todos os logs
+  const logs = [];
+  
+  const originalLog = console.log;
+  const originalError = console.error;
+  const originalWarn = console.warn;
+
+  console.log = function(...args) {
+    logs.push({ type: 'log', msg: args.join(' ') });
+    originalLog.apply(console, args);
+  };
+
+  console.error = function(...args) {
+    logs.push({ type: 'error', msg: args.join(' ') });
+    originalError.apply(console, args);
+  };
+
+  console.warn = function(...args) {
+    logs.push({ type: 'warn', msg: args.join(' ') });
+    originalWarn.apply(console, args);
+  };
+
+  // Sua config Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyD0Ns3F4ZS-qfWD5xAWzwR1tIpDMsRAR54",
+    authDomain: "mercadohub-saas.firebaseapp.com",
+    databaseURL: "https://mercadohub-saas-default-rtdb.firebaseio.com",
+    projectId: "mercadohub-saas",
+    storageBucket: "mercadohub-saas.firebasestorage.app",
+    messagingSenderId: "929142456645",
+    appId: "1:929142456645:web:4e1c079baaa6f75d13be2c"
+  };
+
+  let results = {
+    js: false,
+    firebaseLoad: false,
+    firebaseInit: false,
+    firebaseAuth: false,
+    firebaseDB: false
+  };
+
+  // TESTE 1: JavaScript
+  function testJavaScript() {
+    try {
+      const test = { status: 'working' };
+      document.getElementById('jsTest').innerHTML = `
+        <span class="status-icon success">✅</span>
+        <div class="status-text">
+          <strong>JavaScript Funcionando</strong>
+          <p>Tudo OK!</p>
+        </div>
+      `;
+      results.js = true;
+      console.log('✅ JavaScript test passed');
+    } catch (e) {
+      document.getElementById('jsTest').innerHTML = `
+        <span class="status-icon error">❌</span>
+        <div class="status-text">
+          <strong>JavaScript ERRO</strong>
+          <p>${e.message}</p>
+        </div>
+      `;
+      console.error('❌ JavaScript test failed:', e);
+    }
+  }
+
+  // TESTE 2: Firebase Load
+  function testFirebaseLoad() {
+    try {
+      if (typeof firebase !== 'undefined') {
+        document.getElementById('firebaseLoadTest').innerHTML = `
+          <span class="status-icon success">✅</span>
+          <div class="status-text">
+            <strong>Firebase Carregado</strong>
+            <p>Versão ${firebase.SDK_VERSION}</p>
+          </div>
+        `;
+        document.getElementById('firebaseOutput').innerHTML = `
+          <div class="config-display">
+            <strong>Config Detectada:</strong><br>
+            projectId: ${firebaseConfig.projectId}<br>
+            authDomain: ${firebaseConfig.authDomain}<br>
+            storageBucket: ${firebaseConfig.storageBucket}
+          </div>
+        `;
+        results.firebaseLoad = true;
+        console.log('✅ Firebase loaded successfully');
+      } else {
+        throw new Error('Firebase não foi carregado');
+      }
+    } catch (e) {
+      document.getElementById('firebaseLoadTest').innerHTML = `
+        <span class="status-icon error">❌</span>
+        <div class="status-text">
+          <strong>Firebase NÃO Carregado</strong>
+          <p>${e.message}</p>
+        </div>
+      `;
+      console.error('❌ Firebase load failed:', e);
+    }
+  }
+
+  // TESTE 3: Firebase Init
+  function testFirebaseInit() {
+    try {
+      if (firebase.apps.length === 0) {
+        const app = firebase.initializeApp(firebaseConfig);
+        console.log('✅ Firebase initialized');
+      } else {
+        console.log('✅ Firebase já estava inicializado');
+      }
+
+      document.getElementById('firebaseConnTest').innerHTML = `
+        <span class="status-icon success">✅</span>
+        <div class="status-text">
+          <strong>Firebase Inicializado</strong>
+          <p>App ID: ${firebase.apps[0].name}</p>
+        </div>
+      `;
+      results.firebaseInit = true;
+    } catch (e) {
+      document.getElementById('firebaseConnTest').innerHTML = `
+        <span class="status-icon error">❌</span>
+        <div class="status-text">
+          <strong>Erro ao Inicializar Firebase</strong>
+          <p>${e.message}</p>
+        </div>
+      `;
+      console.error('❌ Firebase init failed:', e);
+    }
+  }
+
+  // TESTE 4: Firebase Auth
+  function testFirebaseAuth() {
+    try {
+      const auth = firebase.auth();
+      
+      firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+          document.getElementById('authTest').innerHTML = `
+            <span class="status-icon success">✅</span>
+            <div class="status-text">
+              <strong>Usuário Autenticado</strong>
+              <p>Email: ${user.email}</p>
+            </div>
+          `;
+          results.firebaseAuth = true;
+        } else {
+          document.getElementById('authTest').innerHTML = `
+            <span class="status-icon warning">⚠️</span>
+            <div class="status-text">
+              <strong>Nenhum usuário logado</strong>
+              <p>Mas Auth está funcionando!</p>
+            </div>
+          `;
+          results.firebaseAuth = true;
+        }
+      });
+
+      console.log('✅ Auth test completed');
+    } catch (e) {
+      document.getElementById('authTest').innerHTML = `
+        <span class="status-icon error">❌</span>
+        <div class="status-text">
+          <strong>Erro em Firebase Auth</strong>
+          <p>${e.message}</p>
+        </div>
+      `;
+      console.error('❌ Auth test failed:', e);
+    }
+  }
+
+  // TESTE 5: Firestore Connection
+  function testFirebaseConnection() {
+    try {
+      const db = firebase.firestore();
+      
+      // Teste de escrita/leitura
+      db.collection('test').add({
+        timestamp: new Date(),
+        test: 'connection'
+      }).then(docRef => {
+        console.log('✅ Firestore write successful:', docRef.id);
+        
+        // Deletar documento de teste
+        docRef.delete();
+        
+        document.getElementById('firebaseConnOutput').innerHTML = `
+          <div class="test-item">
+            <span class="status-icon success">✅</span>
+            <div class="status-text">
+              <strong>Firestore Funcionando</strong>
+              <p>Conexão de leitura/escrita OK!</p>
+            </div>
+          </div>
+        `;
+        results.firebaseDB = true;
+      }).catch(err => {
+        console.error('❌ Firestore write failed:', err);
+        document.getElementById('firebaseConnOutput').innerHTML = `
+          <div class="test-item">
+            <span class="status-icon error">❌</span>
+            <div class="status-text">
+              <strong>Erro ao Escrever no Firestore</strong>
+              <p>${err.message}</p>
+              <p><strong>Verifique as regras de segurança!</strong></p>
+            </div>
+          </div>
+        `;
+      });
+
+    } catch (e) {
+      console.error('❌ Firestore test error:', e);
+      document.getElementById('firebaseConnOutput').innerHTML = `
+        <div class="test-item">
+          <span class="status-icon error">❌</span>
+          <div class="status-text">
+            <strong>Erro no Firestore</strong>
+            <p>${e.message}</p>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  // Atualizar console logs
+  function updateConsoleLogs() {
+    const consoleLogs = document.getElementById('consoleLogs');
+    if (logs.length === 0) {
+      consoleLogs.innerHTML = '<p class="info-log">Nenhum log ainda...</p>';
+    } else {
+      consoleLogs.innerHTML = logs.map(log => {
+        const className = log.type === 'error' ? 'error-log' : log.type === 'warn' ? 'warning-log' : 'success-log';
+        return `<p class="${className}">[${log.type.toUpperCase()}] ${log.msg}</p>`;
+      }).join('');
+    }
+  }
+
+  // Mostrar resumo
+  function showSummary() {
+    const summary = document.getElementById('summary');
+    const summaryContent = document.getElementById('summaryContent');
+    
+    const passed = Object.values(results).filter(v => v).length;
+    const total = Object.keys(results).length;
+    
+    let html = `
+      <div class="test-item">
+        <span class="status-icon">${passed === total ? '✅' : passed >= 3 ? '⚠️' : '❌'}</span>
+        <div class="status-text">
+          <strong>Resultado: ${passed}/${total} testes passaram</strong>
+          <p>
+    `;
+
+    if (passed === total) {
+      html += '✅ Tudo OK! Seu SaaS deve estar funcionando. Se não está, o problema é na lógica dos HTMLs.';
+    } else if (passed >= 3) {
+      html += '⚠️ Alguns testes falharam. Verifique os erros acima.';
+    } else {
+      html += '❌ Múltiplos problemas encontrados. Comece pelo primeiro erro vermelho.';
+    }
+
+    html += `
+          </p>
+        </div>
+      </div>
+      
+      <div class="test-item" style="margin-top: 1rem;">
+        <div class="status-text">
+          <strong>📋 Checklist:</strong>
+          <ul style="list-style-position: inside; margin-top: 0.5rem;">
+            <li>JavaScript: ${results.js ? '✅' : '❌'}</li>
+            <li>Firebase Carregado: ${results.firebaseLoad ? '✅' : '❌'}</li>
+            <li>Firebase Inicializado: ${results.firebaseInit ? '✅' : '❌'}</li>
+            <li>Firebase Auth: ${results.firebaseAuth ? '✅' : '❌'}</li>
+            <li>Firestore DB: ${results.firebaseDB ? '✅' : '❌'}</li>
+          </ul>
+        </div>
+      </div>
+    `;
+
+    summaryContent.innerHTML = html;
+    summary.style.display = 'block';
+  }
+
+  // Executar testes
+  setTimeout(() => {
+    testJavaScript();
+    testFirebaseLoad();
+    testFirebaseInit();
+    testFirebaseAuth();
+    updateConsoleLogs();
+    
+    setTimeout(() => {
+      showSummary();
+      updateConsoleLogs();
+    }, 2000);
+  }, 500);
+
+  // Atualizar logs continuamente
+  setInterval(updateConsoleLogs, 500);
+</script>
+
+</body>
+</html>
