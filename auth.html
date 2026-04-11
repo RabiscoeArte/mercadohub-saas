@@ -424,7 +424,7 @@
 
         // Criar loja automática
         return db.collection('lojas').add({
-          uid_owner: auth.currentUser.uid,
+          uid_owner: user.uid,
           nome: storeName,
           slug: storeName.toLowerCase().replace(/\s+/g, '-'),
           status: 'ativo',
@@ -474,67 +474,84 @@
   }
 
   function handleLogin(e) {
-    e.preventDefault();
+  e.preventDefault();
 
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value;
-    const btn = document.getElementById('loginBtn');
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('loginBtn');
 
-    if (!email || !password) {
-      showAlert('loginAlert', '❌ Preencha todos os campos', 'error');
-      return;
-    }
-
-    btn.disabled = true;
-    const originalText = btn.textContent;
-    btn.innerHTML = '<span class="spinner"></span>Entrando...';
-
-    auth.signInWithEmailAndPassword(email, password)
-      .then(userCredential => {
-        console.log("✅ Login realizado:", userCredential.user.uid);
-
-        // Buscar primeira loja do usuário
-        return db.collection('users').doc(userCredential.user.uid).get()
-          .then(doc => {
-            if (doc.exists) {
-              const lojas = doc.data().lojas || [];
-              return lojas[0] || null;
-            }
-            return null;
-          });
-      })
-      .then(lojaId => {
-        if (lojaId) {
-          console.log("✅ Loja encontrada:", lojaId);
-          showAlert('loginAlert', '✅ Login realizado! Redirecionando...', 'success');
-          
-          setTimeout(() => {
-            window.location.href = `/dashboard.html?loja=${lojaId}`;
-          }, 1500);
-        } else {
-          throw new Error('Nenhuma loja encontrada para este usuário');
-        }
-      })
-      .catch(error => {
-        console.error("❌ Erro de login:", error.code, error.message);
-        
-        let mensagem = error.message;
-        
-        if (error.code === 'auth/user-not-found') {
-          mensagem = 'Usuário não encontrado. Verifique o email.';
-        } else if (error.code === 'auth/wrong-password') {
-          mensagem = 'Senha incorreta.';
-        } else if (error.code === 'auth/too-many-login-attempts') {
-          mensagem = 'Muitas tentativas de login. Aguarde 15 minutos.';
-        } else if (error.code === 'auth/invalid-email') {
-          mensagem = 'Email inválido.';
-        }
-        
-        showAlert('loginAlert', `❌ ${mensagem}`, 'error');
-        btn.disabled = false;
-        btn.textContent = originalText;
-      });
+  if (!email || !password) {
+    showAlert('loginAlert', '❌ Preencha todos os campos', 'error');
+    return;
   }
+
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.innerHTML = '<span class="spinner"></span>Entrando...';
+
+  auth.signInWithEmailAndPassword(email, password)
+
+    // 🔥 ESPERA O AUTH ESTAR PRONTO (CORREÇÃO PRINCIPAL)
+    .then(() => {
+      return new Promise(resolve => {
+        const unsubscribe = auth.onAuthStateChanged(user => {
+          if (user) {
+            unsubscribe(); // evita loop infinito
+            resolve(user);
+          }
+        });
+      });
+    })
+
+    // 🔥 AGORA SIM: Firestore com sessão válida
+    .then(user => {
+      console.log("✅ Usuário autenticado:", user.uid);
+      return db.collection('users').doc(user.uid).get();
+    })
+
+    // 🔥 TRATAR DADOS
+    .then(doc => {
+      if (!doc.exists) {
+        throw new Error("Usuário não encontrado no banco");
+      }
+
+      const lojas = doc.data().lojas || [];
+      const lojaId = lojas[0];
+
+      if (!lojaId) {
+        throw new Error("Nenhuma loja encontrada para este usuário");
+      }
+
+      console.log("✅ Loja encontrada:", lojaId);
+
+      showAlert('loginAlert', '✅ Login realizado! Redirecionando...', 'success');
+
+      setTimeout(() => {
+        window.location.href = `/dashboard.html?loja=${lojaId}`;
+      }, 1500);
+    })
+
+    // 🔥 ERROS
+    .catch(error => {
+      console.error("❌ Erro de login:", error);
+
+      let mensagem = error.message;
+
+      if (error.code === 'auth/user-not-found') {
+        mensagem = 'Usuário não encontrado. Verifique o email.';
+      } else if (error.code === 'auth/wrong-password') {
+        mensagem = 'Senha incorreta.';
+      } else if (error.code === 'auth/too-many-requests') {
+        mensagem = 'Muitas tentativas. Aguarde alguns minutos.';
+      } else if (error.code === 'auth/invalid-email') {
+        mensagem = 'Email inválido.';
+      }
+
+      showAlert('loginAlert', `❌ ${mensagem}`, 'error');
+      btn.disabled = false;
+      btn.textContent = originalText;
+    });
+}
 
   // Verificar se já está logado
   auth.onAuthStateChanged(user => {
