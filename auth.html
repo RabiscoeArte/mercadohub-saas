@@ -339,10 +339,17 @@
   </div>
 </div>
 
-<!-- ✅ FIREBASE SDK - VERSÃO COMPAT (CORRIGIDA) -->
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const firebaseConfig = { ... };
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+</script>
 
 <script>
   // ===== FIREBASE CONFIG =====
@@ -355,11 +362,6 @@
     messagingSenderId: "929142456645",
     appId: "1:929142456645:web:4e1c079baaa6f75d13be2c"
   };
-
-  // Inicializar Firebase
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
 
   console.log("✅ Firebase inicializado com sucesso!");
 
