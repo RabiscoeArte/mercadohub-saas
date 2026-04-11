@@ -8,18 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <!-- Firebase -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-const firebaseConfig = { ... };
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-</script>
+<!-- ✅ FIREBASE SDK - VERSÃO COMPAT (CORRIGIDA) -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   
   <style>
     * {
@@ -579,11 +571,14 @@ const db = getFirestore(app);
   appId: "1:929142456645:web:4e1c079baaa6f75d13be2c"
 };
 
+  const app = firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
   let produtos = [];
   let carrinho = [];
   let lojaId = null;
   let storeData = null;
-
+  
   // ===== INIT =====
   async function init() {
     // Pegar loja_id da URL
