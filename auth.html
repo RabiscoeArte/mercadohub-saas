@@ -151,7 +151,7 @@
       color: white;
     }
 
-    .btn-primary:hover {
+    .btn-primary:hover:not(:disabled) {
       transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(255, 107, 53, 0.3);
     }
@@ -172,6 +172,18 @@
 
     .alert.show {
       display: block;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .alert-success {
@@ -374,9 +386,14 @@
     const alert = document.getElementById(alertId);
     alert.textContent = message;
     alert.className = `alert show alert-${type}`;
+    
+    // Auto-remover após 5 segundos
+    setTimeout(() => {
+      alert.classList.remove('show');
+    }, 5000);
   }
 
-  function handleRegister(e) {
+  async function handleRegister(e) {
     e.preventDefault();
 
     const name = document.getElementById('registerName').value.trim();
@@ -401,164 +418,141 @@
     const originalText = btn.textContent;
     btn.innerHTML = '<span class="spinner"></span>Criando conta...';
 
-    // Criar usuário
-    auth.createUserWithEmailAndPassword(email, password)
-      .then(userCredential => {
-        const user = userCredential.user;
-        console.log("✅ Usuário criado:", user.uid);
+    try {
+      // Criar usuário
+      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      const user = userCredential.user;
+      console.log("✅ Usuário criado:", user.uid);
 
-        // Criar documento do usuário no Firestore
-        return db.collection('users').doc(user.uid).set({
-          uid: user.uid,
-          nome: name,
-          email: email,
-          plano: plan,
-          lojas: [],
-          status: 'ativo',
-          dataRegistro: new Date(),
-          dataExpiração: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        });
-      })
-      .then(() => {
-        console.log("✅ Documento de usuário criado");
-
-        // Criar loja automática
-        return db.collection('lojas').add({
-          uid_owner: user.uid,
-          nome: storeName,
-          slug: storeName.toLowerCase().replace(/\s+/g, '-'),
-          status: 'ativo',
-          produtosCount: 0,
-          plano: plan,
-          dataCriacao: new Date()
-        });
-      })
-      .then(lojaRef => {
-        console.log("✅ Loja criada:", lojaRef.id);
-
-        // Adicionar loja ao documento do usuário
-        return db.collection('users').doc(auth.currentUser.uid).update({
-          lojas: firebase.firestore.FieldValue.arrayUnion(lojaRef.id)
-        }).then(() => lojaRef.id);
-      })
-      .then(lojaId => {
-        console.log("✅ Registro completo! Redirecionando para dashboard...");
-        showAlert('registerAlert', '✅ Conta criada com sucesso! Redirecionando...', 'success');
-        
-        setTimeout(() => {
-          window.location.href = `/dashboard.html?loja=${lojaId}`;
-        }, 2000);
-      })
-      .catch(error => {
-        console.error("❌ Erro:", error.code, error.message);
-        
-        let mensagem = error.message;
-        
-        // Mensagens customizadas
-        if (error.code === 'auth/email-already-in-use') {
-          mensagem = 'Email já registrado. Tente outro ou faça login.';
-        } else if (error.code === 'auth/weak-password') {
-          mensagem = 'Senha muito fraca. Use no mínimo 6 caracteres.';
-        } else if (error.code === 'auth/invalid-email') {
-          mensagem = 'Email inválido.';
-        } else if (error.code === 'auth/operation-not-allowed') {
-          mensagem = 'Registro não permitido. Contate o suporte.';
-        } else if (error.code === 'permission-denied') {
-          mensagem = 'Erro de permissão no banco de dados. Verifique as regras do Firestore.';
-        }
-        
-        showAlert('registerAlert', `❌ ${mensagem}`, 'error');
-        btn.disabled = false;
-        btn.textContent = originalText;
+      // Criar documento do usuário no Firestore
+      await db.collection('users').doc(user.uid).set({
+        uid: user.uid,
+        nome: name,
+        email: email,
+        plano: plan,
+        lojas: [],
+        status: 'ativo',
+        dataRegistro: new Date(),
+        dataExpiração: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       });
-  }
+      console.log("✅ Documento de usuário criado");
 
-  function handleLogin(e) {
-  e.preventDefault();
-
-  const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value;
-  const btn = document.getElementById('loginBtn');
-
-  if (!email || !password) {
-    showAlert('loginAlert', '❌ Preencha todos os campos', 'error');
-    return;
-  }
-
-  btn.disabled = true;
-  const originalText = btn.textContent;
-  btn.innerHTML = '<span class="spinner"></span>Entrando...';
-
-  auth.signInWithEmailAndPassword(email, password)
-
-    // 🔥 ESPERA O AUTH ESTAR PRONTO (CORREÇÃO PRINCIPAL)
-    .then(() => {
-      return new Promise(resolve => {
-        const unsubscribe = auth.onAuthStateChanged(user => {
-          if (user) {
-            unsubscribe(); // evita loop infinito
-            resolve(user);
-          }
-        });
+      // Criar loja automática
+      const lojaRef = await db.collection('lojas').add({
+        uid_owner: user.uid,
+        nome: storeName,
+        slug: storeName.toLowerCase().replace(/\s+/g, '-'),
+        status: 'ativo',
+        produtosCount: 0,
+        plano: plan,
+        dataCriacao: new Date()
       });
-    })
+      console.log("✅ Loja criada:", lojaRef.id);
 
-    // 🔥 AGORA SIM: Firestore com sessão válida
-    .then(user => {
-      console.log("✅ Usuário autenticado:", user.uid);
-      return db.collection('users').doc(user.uid).get();
-    })
+      // Adicionar loja ao documento do usuário
+      await db.collection('users').doc(user.uid).update({
+        lojas: firebase.firestore.FieldValue.arrayUnion(lojaRef.id)
+      });
+      console.log("✅ Registro completo!");
 
-    // 🔥 TRATAR DADOS
-    .then(doc => {
-      if (!doc.exists) {
-        throw new Error("Usuário não encontrado no banco");
-      }
-
-      const lojas = doc.data().lojas || [];
-      const lojaId = lojas[0];
-
-      if (!lojaId) {
-        throw new Error("Nenhuma loja encontrada para este usuário");
-      }
-
-      console.log("✅ Loja encontrada:", lojaId);
-
-      showAlert('loginAlert', '✅ Login realizado! Redirecionando...', 'success');
-
+      // Mostrar sucesso e redirecionar
+      showAlert('registerAlert', '✅ Conta criada com sucesso! Redirecionando...', 'success');
+      btn.textContent = originalText;
+      
+      // Redirecionar após 1.5 segundos
       setTimeout(() => {
-        window.location.href = `/dashboard.html?loja=${lojaId}`;
+        window.location.href = `/dashboard.html?loja=${lojaRef.id}`;
       }, 1500);
-    })
 
-    // 🔥 ERROS
-    .catch(error => {
-      console.error("❌ Erro de login:", error);
-
+    } catch (error) {
+      console.error("❌ Erro:", error.code, error.message);
+      
       let mensagem = error.message;
+      
+      // Mensagens customizadas
+      if (error.code === 'auth/email-already-in-use') {
+        mensagem = 'Email já registrado. Tente outro ou faça login.';
+      } else if (error.code === 'auth/weak-password') {
+        mensagem = 'Senha muito fraca. Use no mínimo 6 caracteres.';
+      } else if (error.code === 'auth/invalid-email') {
+        mensagem = 'Email inválido.';
+      } else if (error.code === 'auth/operation-not-allowed') {
+        mensagem = 'Registro não permitido. Contate o suporte.';
+      } else if (error.code === 'permission-denied') {
+        mensagem = 'Erro de permissão. Verifique as regras do Firestore.';
+      }
+      
+      showAlert('registerAlert', `❌ ${mensagem}`, 'error');
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  }
 
+  async function handleLogin(e) {
+    e.preventDefault();
+
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const btn = document.getElementById('loginBtn');
+
+    if (!email || !password) {
+      showAlert('loginAlert', '❌ Preencha todos os campos', 'error');
+      return;
+    }
+
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.innerHTML = '<span class="spinner"></span>Entrando...';
+
+    try {
+      // Fazer login
+      const userCredential = await auth.signInWithEmailAndPassword(email, password);
+      console.log("✅ Login realizado:", userCredential.user.uid);
+
+      // Buscar primeira loja do usuário
+      const userDoc = await db.collection('users').doc(userCredential.user.uid).get();
+      
+      if (userDoc.exists) {
+        const lojas = userDoc.data().lojas || [];
+        if (lojas.length > 0) {
+          console.log("✅ Loja encontrada:", lojas[0]);
+          showAlert('loginAlert', '✅ Login realizado! Redirecionando...', 'success');
+          
+          setTimeout(() => {
+            window.location.href = `/dashboard.html?loja=${lojas[0]}`;
+          }, 1500);
+        } else {
+          throw new Error('Nenhuma loja encontrada para este usuário');
+        }
+      } else {
+        throw new Error('Usuário não encontrado');
+      }
+
+    } catch (error) {
+      console.error("❌ Erro de login:", error.code, error.message);
+      
+      let mensagem = error.message;
+      
       if (error.code === 'auth/user-not-found') {
         mensagem = 'Usuário não encontrado. Verifique o email.';
       } else if (error.code === 'auth/wrong-password') {
         mensagem = 'Senha incorreta.';
-      } else if (error.code === 'auth/too-many-requests') {
-        mensagem = 'Muitas tentativas. Aguarde alguns minutos.';
+      } else if (error.code === 'auth/too-many-login-attempts') {
+        mensagem = 'Muitas tentativas de login. Aguarde 15 minutos.';
       } else if (error.code === 'auth/invalid-email') {
         mensagem = 'Email inválido.';
       }
-
+      
       showAlert('loginAlert', `❌ ${mensagem}`, 'error');
       btn.disabled = false;
       btn.textContent = originalText;
-    });
-}
+    }
+  }
 
   // Verificar se já está logado
   auth.onAuthStateChanged(user => {
     if (user) {
       console.log("✅ Usuário já logado:", user.email);
-      // Redirecionar para dashboard se já está logado
-      // window.location.href = '/dashboard.html';
     }
   });
 
