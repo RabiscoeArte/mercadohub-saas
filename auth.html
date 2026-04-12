@@ -345,14 +345,14 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
 <script>
-  // ===== FIREBASE CONFIG =====
+  // ===== FIREBASE CONFIG - NOVO PROJETO =====
   const firebaseConfig = {
-    apiKey: "AIzaSyD0Ns3F4ZS-qfWD5xAWzwR1tIpDMsRAR54",
-    authDomain: "mercadohub-saas.firebaseapp.com",
-    projectId: "mercadohub-saas",
-    storageBucket: "mercadohub-saas.firebasestorage.app",
-    messagingSenderId: "929142456645",
-    appId: "1:329142456645:web:4e1c079baaa6f75d13be2c"
+    apiKey: "AIzaSyDaZWj9ApORih26Pb4x-46ilrtxEXxQfm0",
+    authDomain: "mercado-hub-90a82.firebaseapp.com",
+    projectId: "mercado-hub-90a82",
+    storageBucket: "mercado-hub-90a82.firebasestorage.app",
+    messagingSenderId: "872416491456",
+    appId: "1:872416491456:web:29c37a42cfeeb40a087a25"
   };
 
   // Inicializar Firebase
@@ -360,7 +360,7 @@
   const auth = firebase.auth();
   const db = firebase.firestore();
 
-  console.log("✅ Firebase inicializado!");
+  console.log("✅ Firebase inicializado com novo projeto!");
 
   // ===== FUNÇÕES =====
 
@@ -416,6 +416,7 @@
       const user = userCredential.user;
       console.log("✅ Usuário criado:", user.uid);
 
+      // Criar documento do usuário
       await db.collection('users').doc(user.uid).set({
         uid: user.uid,
         nome: name,
@@ -428,6 +429,7 @@
       });
       console.log("✅ Documento de usuário criado");
 
+      // Criar loja automática
       const lojaRef = await db.collection('lojas').add({
         uid_owner: user.uid,
         nome: storeName,
@@ -439,6 +441,7 @@
       });
       console.log("✅ Loja criada:", lojaRef.id);
 
+      // Atualizar array de lojas do usuário
       await db.collection('users').doc(user.uid).update({
         lojas: firebase.firestore.FieldValue.arrayUnion(lojaRef.id)
       });
@@ -464,8 +467,6 @@
         mensagem = 'Email inválido.';
       } else if (error.code === 'auth/operation-not-allowed') {
         mensagem = 'Registro não permitido. Contate o suporte.';
-      } else if (error.code === 'permission-denied') {
-        mensagem = 'Erro de permissão. Verifique as regras do Firestore.';
       }
       
       showAlert('registerAlert', `❌ ${mensagem}`, 'error');
@@ -494,7 +495,7 @@
       const userCredential = await auth.signInWithEmailAndPassword(email, password);
       console.log("✅ Autenticação bem-sucedida:", userCredential.user.uid);
 
-      // 🔧 CORREÇÃO: Aguardar Firestore conectar
+      // Aguardar Firestore conectar
       await new Promise(resolve => setTimeout(resolve, 2000));
       console.log("✅ Aguardou 2 segundos para Firestore");
 
@@ -538,8 +539,6 @@
         mensagem = 'Muitas tentativas. Aguarde 15 minutos.';
       } else if (error.code === 'auth/invalid-email') {
         mensagem = 'Email inválido.';
-      } else if (error.message && error.message.includes('offline')) {
-        mensagem = 'Firestore não conseguiu conectar. Tente novamente.';
       }
       
       showAlert('loginAlert', `❌ ${mensagem}`, 'error');
