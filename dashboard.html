@@ -998,6 +998,220 @@ if (!lojaId && lojas.length > 0) {
     });
   }
 
+<script>
+  // ===== FIREBASE CONFIG =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyDaZWj9ApORih26Pb4x-46ilrtxEXxQfm0",
+    authDomain: "mercado-hub-90a82.firebaseapp.com",
+    projectId: "mercado-hub-90a82",
+    storageBucket: "mercado-hub-90a82.firebasestorage.app",
+    messagingSenderId: "872416491456",
+    appId: "1:872416491456:web:29c37a42cfeeb40a087a25"
+  };
+
+  const app = firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  let currentUser = null;
+  let currentStore = null;
+  let products = [];
+
+  // ===== INIT =====
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      currentUser = user;
+      document.getElementById('userEmail').textContent = user.email;
+      
+      // Buscar lojas do usuário
+      const userDoc = await db.collection('users').doc(user.uid).get();
+      if (userDoc.exists) {
+        const userData = userDoc.data();
+        const lojas = userData.lojas || [];
+        
+        const select = document.getElementById('storeSelect');
+        select.innerHTML = '';
+        
+        for (const lojaId of lojas) {
+          const lojaDoc = await db.collection('lojas').doc(lojaId).get();
+          if (lojaDoc.exists) {
+            const option = document.createElement('option');
+            option.value = lojaId;
+            option.textContent = lojaDoc.data().nome;
+            select.appendChild(option);
+          }
+        }
+        
+        // Carregar primeira loja
+        let lojaId = new URLSearchParams(window.location.search).get('loja');
+        if (!lojaId && lojas.length > 0) {
+          lojaId = String(lojas[0]).trim();
+        }
+        select.value = lojaId;
+        await loadStore(lojaId);
+      }
+    } else {
+      window.location.href = '/auth.html';
+    }
+  });
+
+  async function loadStore(lojaId) {
+    // Sanitizar o lojaId
+    lojaId = String(lojaId).trim();
+    currentStore = lojaId;
+    
+    const lojaDoc = await db.collection('lojas').doc(lojaId).get();
+    if (lojaDoc.exists) {
+      const loja = lojaDoc.data();
+      
+      // Carregar produtos
+      const prods = await db.collection('produtos')
+        .where('loja_id', '==', lojaId)
+        .get();
+      
+      products = [];
+      prods.forEach(doc => {
+        products.push({ id: doc.id, ...doc.data() });
+      });
+      
+      renderProducts();
+      updateMetrics(loja);
+      carregarLinkLoja();
+    }
+  }
+
+  function updateMetrics(loja) {
+    document.getElementById('productscount').textContent = products.length;
+    document.getElementById('salestoday').textContent = 'R$ 0,00';
+    document.getElementById('orderstoday').textContent = '0';
+    document.getElementById('visitorsmonth').textContent = '0';
+  }
+
+  function renderProducts() {
+    const tbody = document.getElementById('productsTableBody');
+    
+    if (products.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem; color: #999;">Nenhum produto cadastrado. <a href="#" onclick="openModal('addProduct')">Criar primeiro produto</a></td></tr>`;
+      return;
+    }
+    
+    tbody.innerHTML = products.map(p => `
+      <tr>
+        <td><img src="${p.imagem || 'https://via.placeholder.com/40'}" class="product-img"></td>
+        <td><strong>${p.nome}</strong></td>
+        <td>${p.categoria}</td>
+        <td>R$ ${Number(p.preco || 0).toFixed(2)}</td>
+        <td>${p.estoque || 0}</td>
+        <td><span class="badge success">Ativo</span></td>
+        <td>
+          <div class="action-btns">
+            <button class="btn-icon" onclick="editProduct('${p.id}')">✏️</button>
+            <button class="btn-icon" onclick="deleteProduct('${p.id}')">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // ===== ATUALIZAR PRODUTOS COUNT =====
+  async function atualizarProdutosCount(lojaId) {
+    try {
+      const prods = await db.collection('produtos')
+        .where('loja_id', '==', lojaId)
+        .get();
+      
+      const count = prods.size;
+      
+      await db.collection('lojas').doc(lojaId).update({
+        produtosCount: count
+      });
+      
+      console.log('✅ produtosCount atualizado para:', count);
+    } catch (error) {
+      console.error('❌ Erro ao atualizar produtosCount:', error);
+    }
+  }
+
+  // ===== CRIAR PRODUTO =====
+  document.getElementById('productForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const produto = {
+      loja_id: currentStore,
+      nome: document.getElementById('prodName').value,
+      descricao: document.getElementById('prodDescription').value,
+      categoria: document.getElementById('prodCategory').value,
+      preco: parseFloat(document.getElementById('prodPrice').value),
+      promocao: parseFloat(document.getElementById('prodPromo').value) || 0,
+      imagem: document.getElementById('prodImage').value,
+      estoque: parseInt(document.getElementById('prodStock').value),
+      dataCriacao: new Date()
+    };
+    
+    try {
+      await db.collection('produtos').add(produto);
+      alert('✅ Produto adicionado com sucesso!');
+      
+      // ⭐ ATUALIZAR PRODUTOS COUNT
+      await atualizarProdutosCount(currentStore);
+      
+      closeModal();
+      await loadStore(currentStore);
+      e.target.reset();
+    } catch (error) {
+      alert('❌ Erro ao adicionar produto: ' + error.message);
+    }
+  });
+
+  // ===== DELETAR PRODUTO =====
+  async function deleteProduct(prodId) {
+    if (confirm('Tem certeza que deseja deletar este produto?')) {
+      try {
+        await db.collection('produtos').doc(prodId).delete();
+        
+        // ⭐ ATUALIZAR PRODUTOS COUNT
+        await atualizarProdutosCount(currentStore);
+        
+        alert('✅ Produto deletado!');
+        await loadStore(currentStore);
+      } catch (error) {
+        alert('❌ Erro: ' + error.message);
+      }
+    }
+  }
+
+  // ===== UTILITY FUNCTIONS =====
+  function switchTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+      tab.classList.remove('active');
+    });
+    
+    // Remove active from all nav links
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.classList.remove('active');
+    });
+    
+    // Show selected tab
+    const tabEl = document.getElementById(`tab-${tabName}`);
+    if (tabEl) {
+      tabEl.classList.add('active');
+    }
+    
+    // Mark nav link as active
+    event.target.closest('.nav-link').classList.add('active');
+  }
+
+  function openModal(modalId) {
+    document.getElementById(`modal-${modalId}`).classList.add('show');
+  }
+
+  function closeModal() {
+    document.querySelectorAll('.modal').forEach(modal => {
+      modal.classList.remove('show');
+    });
+  }
+
   function changeStore() {
     const lojaId = document.getElementById('storeSelect').value;
     if (lojaId) {
@@ -1031,7 +1245,7 @@ if (!lojaId && lojas.length > 0) {
     });
   });
 
-// ===== MEU LINK DA LOJA =====
+  // ===== MEU LINK DA LOJA =====
   function carregarLinkLoja() {
     if (!currentStore) return;
     const dominio = window.location.origin;
@@ -1060,11 +1274,11 @@ if (!lojaId && lojas.length > 0) {
       alert('❌ Link não carregado');
       return;
     }
-    const msg = encodeURIComponent(`Olá!\\n\\nVisita minha loja: ${el.value}\\n\\nAté logo!`);
+    const msg = encodeURIComponent(`Olá!\n\nVisita minha loja: ${el.value}\n\nAté logo!`);
     window.open(`https://wa.me/?text=${msg}`, '_blank');
   }
   
-  // Settings form
+  // ===== SETTINGS FORM =====
   document.getElementById('settingsForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
