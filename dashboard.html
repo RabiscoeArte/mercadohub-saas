@@ -526,7 +526,27 @@
         <option value="">Carregando...</option>
       </select>
     </div>
-<!-- ===== MEU LINK DA LOJA ===== -->
+
+    <ul class="nav">
+      <li class="nav-item">
+        <a class="nav-link active" onclick="switchTab('dashboard')">
+          <span class="nav-icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" onclick="switchTab('products')">
+          <span class="nav-icon">🛍️</span>
+          <span>Produtos</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" onclick="switchTab('orders')">
+          <span class="nav-icon">📦</span>
+          <span>Pedidos</span>
+        </a>
+      </li>
+    <!-- ===== MEU LINK DA LOJA ===== -->
 <div id="meuLink" class="dashboard-section">
   <h2>🔗 Meu Link da Loja</h2>
   
@@ -605,25 +625,6 @@
     </div>
   </div>
 </div>
-    <ul class="nav">
-      <li class="nav-item">
-        <a class="nav-link active" onclick="switchTab('dashboard')">
-          <span class="nav-icon">📊</span>
-          <span>Dashboard</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" onclick="switchTab('products')">
-          <span class="nav-icon">🛍️</span>
-          <span>Produtos</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" onclick="switchTab('orders')">
-          <span class="nav-icon">📦</span>
-          <span>Pedidos</span>
-        </a>
-      </li>
       <li class="nav-item">
         <a class="nav-link" onclick="switchTab('settings')">
           <span class="nav-icon">⚙️</span>
@@ -862,6 +863,7 @@
 
 <script>
   // ===== FIREBASE CONFIG =====
+  const firebaseConfig = {
   apiKey: "AIzaSyDaZWj9ApORih26Pb4x-46ilrtxEXxQfm0",
   authDomain: "mercado-hub-90a82.firebaseapp.com",
   projectId: "mercado-hub-90a82",
