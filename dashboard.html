@@ -868,6 +868,12 @@ if (!lojaId && lojas.length > 0) {
   // Sanitizar o lojaId
   lojaId = String(lojaId).trim();
   currentStore = lojaId;
+  
+  // DEBUG
+  console.log('📍 DEBUG loadStore:');
+  console.log('   lojaId recebido:', lojaId);
+  console.log('   currentStore definido como:', currentStore);
+  console.log('   tipo:', typeof currentStore);
     
     const lojaDoc = await db.collection('lojas').doc(lojaId).get();
     if (lojaDoc.exists) {
