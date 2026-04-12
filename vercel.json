@@ -21,6 +21,10 @@
       "destination": "/billing.html"
     },
     {
+      "source": "/loja/:id",
+      "destination": "/storefront.html?lojaId=:id"
+    },
+    {
       "source": "/loja",
       "destination": "/storefront.html"
     },
