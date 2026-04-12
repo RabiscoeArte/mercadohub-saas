@@ -852,7 +852,10 @@
         }
         
         // Carregar primeira loja
-        const lojaId = new URLSearchParams(window.location.search).get('loja') || lojas[0];
+        let lojaId = new URLSearchParams(window.location.search).get('loja');
+if (!lojaId && lojas.length > 0) {
+  lojaId = String(lojas[0]).trim();
+}
         select.value = lojaId;
         await loadStore(lojaId);
       }
@@ -862,7 +865,9 @@
   });
 
   async function loadStore(lojaId) {
-    currentStore = lojaId;
+  // Sanitizar o lojaId
+  lojaId = String(lojaId).trim();
+  currentStore = lojaId;
     
     const lojaDoc = await db.collection('lojas').doc(lojaId).get();
     if (lojaDoc.exists) {
