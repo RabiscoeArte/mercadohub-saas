@@ -526,7 +526,85 @@
         <option value="">Carregando...</option>
       </select>
     </div>
+<!-- ===== MEU LINK DA LOJA ===== -->
+<div id="meuLink" class="dashboard-section">
+  <h2>🔗 Meu Link da Loja</h2>
+  
+  <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+    <p style="color: #666; margin-bottom: 1rem;">
+      Compartilhe este link com seus clientes para que acessem sua loja:
+    </p>
+    
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+      <input 
+        type="text" 
+        id="linkLoja" 
+        readonly 
+        style="
+          flex: 1;
+          padding: 0.8rem;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          font-family: 'Courier New', monospace;
+          font-size: 0.9rem;
+          background: white;
+        "
+      >
+      <button 
+        onclick="copiarLink()" 
+        style="
+          padding: 0.8rem 1.5rem;
+          background: #28a745;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          font-weight: 600;
+          cursor: pointer;
+        "
+      >
+        📋 Copiar
+      </button>
+    </div>
 
+    <div style="display: flex; gap: 0.5rem;">
+      <button 
+        onclick="abrirLojaEmNovaAba()" 
+        style="
+          flex: 1;
+          padding: 0.8rem;
+          background: #007bff;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          font-weight: 600;
+          cursor: pointer;
+        "
+      >
+        👁️ Visualizar Loja
+      </button>
+
+      <button 
+        onclick="compartilharWhatsApp()" 
+        style="
+          flex: 1;
+          padding: 0.8rem;
+          background: #25D366;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          font-weight: 600;
+          cursor: pointer;
+        "
+      >
+        💚 Compartilhar WhatsApp
+      </button>
+    </div>
+
+    <div style="margin-top: 1rem; padding: 1rem; background: #cfe2ff; border-left: 4px solid #007bff; border-radius: 4px; color: #0c5aa0;">
+      <strong>💡 Dica:</strong> Compartilhe este link com seus clientes nas redes sociais, WhatsApp ou email para que eles acessem sua loja!
+    </div>
+  </div>
+</div>
     <ul class="nav">
       <li class="nav-item">
         <a class="nav-link active" onclick="switchTab('dashboard')">
@@ -784,7 +862,6 @@
 
 <script>
   // ===== FIREBASE CONFIG =====
-  const firebaseConfig = {
   apiKey: "AIzaSyDaZWj9ApORih26Pb4x-46ilrtxEXxQfm0",
   authDomain: "mercado-hub-90a82.firebaseapp.com",
   projectId: "mercado-hub-90a82",
@@ -1009,6 +1086,47 @@
       alert('❌ Erro: ' + error.message);
     }
   });
+  // ===== MEU LINK DA LOJA =====
+
+function carregarLinkLoja() {
+  const lojaId = currentStore;
+  const dominio = window.location.origin;
+  const linkLoja = `${dominio}/loja/${lojaId}`;
+  
+  document.getElementById('linkLoja').value = linkLoja;
+  console.log("✅ Link da loja:", linkLoja);
+}
+
+function copiarLink() {
+  const linkInput = document.getElementById('linkLoja');
+  linkInput.select();
+  document.execCommand('copy');
+  
+  alert('✅ Link copiado!');
+}
+
+function abrirLojaEmNovaAba() {
+  const linkLoja = document.getElementById('linkLoja').value;
+  window.open(linkLoja, '_blank');
+}
+
+function compartilharWhatsApp() {
+  const linkLoja = document.getElementById('linkLoja').value;
+  
+  const mensagem = encodeURIComponent(
+    `Olá! 👋\n\nVocê foi convidado a visitar minha loja online!\n\n🛍️ Visite: ${linkLoja}\n\nAté logo!`
+  );
+  
+  const whatsappUrl = `https://wa.me/?text=${mensagem}`;
+  window.open(whatsappUrl, '_blank');
+}
+
+// Chamar quando dashboard carregar
+setTimeout(function() {
+  if (currentStore) {
+    carregarLinkLoja();
+  }
+}, 1000);
 </script>
 
 </body>
