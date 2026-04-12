@@ -580,9 +580,18 @@
   
   // ===== INIT =====
   async function init() {
-    // Pegar loja_id da URL
+    // Pegar loja_id da URL (aceita ?loja= ou ?lojaId=)
     const params = new URLSearchParams(window.location.search);
-    lojaId = params.get('loja') || localStorage.getItem('lojaId');
+    lojaId = params.get('loja') || params.get('lojaId') || localStorage.getItem('lojaId');
+
+    // Também aceita /loja/abc123 no path
+    if (!lojaId) {
+      const path = window.location.pathname;
+      const matches = path.match(/\/loja\/([a-zA-Z0-9]+)/);
+      if (matches) {
+        lojaId = matches[1];
+      }
+    }
 
     if (!lojaId) {
       document.getElementById('productsContainer').innerHTML = `
