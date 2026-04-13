@@ -880,7 +880,13 @@
       
       renderProducts();
       updateMetrics(loja);
-      carregarLinkLoja();
+      
+      // ✅ ADICIONAR ESTAS LINHAS
+      console.log('⏳ Carregando dados complementares...');
+      await carregarLinkLoja();
+      await loadPendingOrders();
+      rastrearVisitante();
+      console.log('✅ Todos os dados carregados');
     }
   }
 
@@ -1054,11 +1060,120 @@
     modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
   });
 
-  function carregarLinkLoja() {
-    if (!currentStore) return;
-    const linkLoja = `${window.location.origin}/loja/${currentStore}`;
-    const el = document.getElementById('linkLoja');
-    if (el) el.value = linkLoja;
+  // ===== FUNÇÃO 1: TOGGLE SIDEBAR (MENU MOBILE) =====
+  function toggleSidebar() {
+    console.log('📱 Alternando sidebar');
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+      sidebar.classList.toggle('show');
+      console.log('✅ Sidebar toggled');
+    } else {
+      console.warn('⚠️ .sidebar não encontrado');
+    }
+  }
+
+  // ===== FUNÇÃO 2: CARREGAR PEDIDOS PENDENTES =====
+  async function loadPendingOrders() {
+    try {
+      if (!currentStore) {
+        console.log('⏳ currentStore não definido ainda');
+        return;
+      }
+
+      console.log('🔄 Carregando pedidos pendentes para:', currentStore);
+      
+      const pedidosQuery = await db.collection('pedidos')
+        .where('loja_id', '==', currentStore)
+        .get();
+      
+      console.log('📦 Total de pedidos encontrados:', pedidosQuery.size);
+      
+      let pendingCount = 0;
+      
+      pedidosQuery.forEach(doc => {
+        const pedido = doc.data();
+        console.log('   Pedido:', doc.id, 'Status:', pedido.status || 'sem status');
+        
+        if (!pedido.status || pedido.status === 'pending' || pedido.status === 'pendente') {
+          pendingCount++;
+        }
+      });
+      
+      console.log('⏳ Pedidos pendentes:', pendingCount);
+      
+      const ordersEl = document.getElementById('orderstoday');
+      if (ordersEl) {
+        ordersEl.textContent = pendingCount;
+        console.log('✅ Contador de pedidos atualizado');
+      }
+      
+    } catch (error) {
+      console.error('❌ Erro ao carregar pedidos pendentes:', error);
+      console.error('   Código:', error.code);
+      console.error('   Mensagem:', error.message);
+    }
+  }
+
+  // ===== FUNÇÃO 3: RASTREAR VISITANTES =====
+  function rastrearVisitante() {
+    try {
+      if (!currentStore) return;
+      
+      const hoje = new Date().toISOString().split('T')[0];
+      const chaveLocal = `visita_${currentStore}_${hoje}`;
+      
+      if (localStorage.getItem(chaveLocal)) {
+        console.log('ℹ️ Já registrou visita hoje');
+        return;
+      }
+      
+      localStorage.setItem(chaveLocal, 'true');
+      
+      console.log('👤 Registrando novo visitante');
+      db.collection('lojas').doc(currentStore).update({
+        visitantesMes: firebase.firestore.FieldValue.increment(1)
+      });
+      
+      console.log('✅ Visitante registrado');
+    } catch (error) {
+      console.warn('⚠️ Erro ao rastrear visitante:', error.message);
+    }
+  }
+
+  // ===== FUNÇÃO 4: CARREGAR LINK COM SLUG =====
+  async function carregarLinkLoja() {
+    try {
+      if (!currentStore) {
+        console.log('⏳ currentStore não definido ainda');
+        return;
+      }
+
+      console.log('🔗 Carregando link da loja:', currentStore);
+      
+      const lojaDoc = await db.collection('lojas').doc(currentStore).get();
+      
+      if (lojaDoc.exists) {
+        const loja = lojaDoc.data();
+        const slug = loja.slug || currentStore;
+        
+        console.log('📍 Slug encontrado:', slug);
+        
+        const dominio = window.location.origin;
+        const linkLoja = `${dominio}/loja/${slug}`;
+        
+        const el = document.getElementById('linkLoja');
+        if (el) {
+          el.value = linkLoja;
+          console.log('✅ Link carregado:', linkLoja);
+        } else {
+          console.warn('⚠️ Elemento linkLoja não encontrado');
+        }
+      } else {
+        console.error('❌ Loja não encontrada:', currentStore);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao carregar link:', error);
+    }
   }
 
   function copiarLink() {
