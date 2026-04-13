@@ -698,32 +698,37 @@
     }
 
     container.innerHTML = list.map(p => {
-      const preco = Number(p.preco) || 0;
-      const promo = Number(p.promocao) || 0;
-      const desconto = promo > 0 ? Math.round((1 - promo/preco) * 100) : 0;
+  const preco = Number(p.preco) || 0;
+  const promo = Number(p.promocao) || 0;
+  const desconto = promo > 0 ? Math.round((1 - promo/preco) * 100) : 0;
 
-      return `
-        <div class="product-card">
-          <img src="${p.imagem || 'https://via.placeholder.com/200'}" class="product-img" onerror="this.src='https://via.placeholder.com/200'">
-          <div class="product-info">
-            <div class="product-name">${p.nome}</div>
-            <div class="product-desc">${p.descricao || ''}</div>
-            <div class="product-price">
-              ${promo > 0 ? `
-                <span class="price">R$ ${promo.toFixed(2)}</span>
-                <span class="price-old">R$ ${preco.toFixed(2)}</span>
-                <span class="discount-badge">-${desconto}%</span>
-              ` : `
-                <span class="price">R$ ${preco.toFixed(2)}</span>
-              `}
-            </div>
-            <button class="add-btn" onclick="addCart('${p.id}', '${p.nome}', ${promo > 0 ? promo : preco})">
-              🛒 Adicionar
-            </button>
-          </div>
+  return `
+    <div class="product-card">
+      <div class="img-container">
+        ${promo > 0 ? `<span class="discount-badge">-${desconto}%</span>` : ``}
+        <img src="${p.imagem || 'https://via.placeholder.com/200'}" class="product-img" onerror="this.src='https://via.placeholder.com/200'">
+      </div>
+
+      <div class="product-info">
+        <div class="product-name">${p.nome}</div>
+        <div class="product-desc">${p.descricao || ''}</div>
+
+        <div class="product-price">
+          ${promo > 0 ? `
+            <span class="price">R$ ${promo.toFixed(2)}</span>
+            <span class="price-old">R$ ${preco.toFixed(2)}</span>
+          ` : `
+            <span class="price">R$ ${preco.toFixed(2)}</span>
+          `}
         </div>
-      `;
-    }).join('');
+
+        <button class="add-btn" onclick="addCart('${p.id}', '${p.nome}', ${promo > 0 ? promo : preco})">
+          🛒 Adicionar
+        </button>
+      </div>
+    </div>
+  `;
+}).join('');
   }
 
   function filterProducts() {
