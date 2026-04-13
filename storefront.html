@@ -597,12 +597,28 @@
     console.log('2️⃣ Tentando extrair do path:', path);
     
     // ✅ REGEX CORRIGIDO - aceita qualquer coisa
-    const matches = path.match(/\/loja\/([^/]+)/);
-    
-    if (matches) {
-      lojaId = matches[1];
-      console.log('3️⃣ lojaId extraído do path:', lojaId);
-    }
+    // ✅ NOVO (tenta slug PRIMEIRO, depois ID):
+const matches = path.match(/\/loja\/([^/]+)/);
+if (matches) {
+  const slugOuId = matches[1];
+  
+  console.log('🔍 Procurando loja com slug:', slugOuId);
+  
+  // Primeiro tenta buscar por SLUG
+  const slugQuery = await db.collection('lojas')
+    .where('slug', '==', slugOuId)
+    .get();
+  
+  if (!slugQuery.empty) {
+    // Encontrou por slug
+    lojaId = slugQuery.docs[0].id;
+    console.log('✅ Loja encontrada por slug, ID:', lojaId);
+  } else {
+    // Se não encontrou por slug, tenta por ID
+    lojaId = slugOuId;
+    console.log('ℹ️ Slug não encontrado, tentando como ID:', lojaId);
+  }
+}
   }
 
   console.log('4️⃣ lojaId final:', lojaId);
