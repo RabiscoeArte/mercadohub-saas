@@ -810,13 +810,13 @@
 <script>
   // ===== FIREBASE CONFIG =====
   const firebaseConfig = {
-  apiKey: "AIzaSyDaZWj9ApORih26Pb4x-46ilrtxEXxQfm0",
-  authDomain: "mercado-hub-90a82.firebaseapp.com",
-  projectId: "mercado-hub-90a82",
-  storageBucket: "mercado-hub-90a82.firebasestorage.app",
-  messagingSenderId: "872416491456",
-  appId: "1:872416491456:web:29c37a42cfeeb40a087a25"
-};
+    apiKey: "AIzaSyDaZWj9ApORih26Pb4x-46ilrtxEXxQfm0",
+    authDomain: "mercado-hub-90a82.firebaseapp.com",
+    projectId: "mercado-hub-90a82",
+    storageBucket: "mercado-hub-90a82.firebasestorage.app",
+    messagingSenderId: "872416491456",
+    appId: "1:872416491456:web:29c37a42cfeeb40a087a25"
+  };
 
   const app = firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
@@ -826,13 +826,11 @@
   let currentStore = null;
   let products = [];
 
-  // ===== INIT =====
   auth.onAuthStateChanged(async (user) => {
     if (user) {
       currentUser = user;
       document.getElementById('userEmail').textContent = user.email;
       
-      // Buscar lojas do usuário
       const userDoc = await db.collection('users').doc(user.uid).get();
       if (userDoc.exists) {
         const userData = userDoc.data();
@@ -851,11 +849,10 @@
           }
         }
         
-        // Carregar primeira loja
         let lojaId = new URLSearchParams(window.location.search).get('loja');
-if (!lojaId && lojas.length > 0) {
-  lojaId = String(lojas[0]).trim();
-}
+        if (!lojaId && lojas.length > 0) {
+          lojaId = lojas[0];
+        }
         select.value = lojaId;
         await loadStore(lojaId);
       }
@@ -865,21 +862,13 @@ if (!lojaId && lojas.length > 0) {
   });
 
   async function loadStore(lojaId) {
-  // Sanitizar o lojaId
-  lojaId = String(lojaId).trim();
-  currentStore = lojaId;
-  
-  // DEBUG
-  console.log('📍 DEBUG loadStore:');
-  console.log('   lojaId recebido:', lojaId);
-  console.log('   currentStore definido como:', currentStore);
-  console.log('   tipo:', typeof currentStore);
+    console.log('🔄 Carregando loja:', lojaId);
+    currentStore = lojaId;
     
     const lojaDoc = await db.collection('lojas').doc(lojaId).get();
     if (lojaDoc.exists) {
       const loja = lojaDoc.data();
       
-      // Carregar produtos
       const prods = await db.collection('produtos')
         .where('loja_id', '==', lojaId)
         .get();
@@ -904,12 +893,10 @@ if (!lojaId && lojas.length > 0) {
 
   function renderProducts() {
     const tbody = document.getElementById('productsTableBody');
-    
     if (products.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem; color: #999;">Nenhum produto cadastrado. <a href="#" onclick="openModal('addProduct')">Criar primeiro produto</a></td></tr>`;
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nenhum produto</td></tr>';
       return;
     }
-    
     tbody.innerHTML = products.map(p => `
       <tr>
         <td><img src="${p.imagem || 'https://via.placeholder.com/40'}" class="product-img"></td>
@@ -919,13 +906,34 @@ if (!lojaId && lojas.length > 0) {
         <td>${p.estoque || 0}</td>
         <td><span class="badge success">Ativo</span></td>
         <td>
-          <div class="action-btns">
-            <button class="btn-icon" onclick="editProduct('${p.id}')">✏️</button>
-            <button class="btn-icon" onclick="deleteProduct('${p.id}')">🗑️</button>
-          </div>
+          <button class="btn-icon" onclick="editProduct('${p.id}')">✏️</button>
+          <button class="btn-icon" onclick="deleteProduct('${p.id}')">🗑️</button>
         </td>
       </tr>
     `).join('');
+  }
+
+  async function atualizarProdutosCount(lojaId) {
+    try {
+      console.log('🔄 Atualizando produtosCount para:', lojaId);
+      
+      const prods = await db.collection('produtos')
+        .where('loja_id', '==', lojaId)
+        .get();
+      
+      const count = prods.size;
+      console.log('✅ Total de produtos:', count);
+      
+      await db.collection('lojas').doc(lojaId).update({
+        produtosCount: count
+      });
+      
+      console.log('✅ produtosCount atualizado!');
+      return count;
+    } catch (error) {
+      console.error('❌ ERRO:', error.code, error.message);
+      throw error;
+    }
   }
 
   document.getElementById('productForm').addEventListener('submit', async (e) => {
@@ -944,21 +952,84 @@ if (!lojaId && lojas.length > 0) {
     };
     
     try {
-      await db.collection('produtos').add(produto);
-      alert('✅ Produto adicionado com sucesso!');
+      console.log('📝 Criando produto com loja_id:', currentStore);
+      
+      const docRef = await db.collection('produtos').add(produto);
+      console.log('✅ Produto criado:', docRef.id);
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const count = await atualizarProdutosCount(currentStore);
+      console.log('📊 Novo count:', count);
+      
+      alert('✅ Produto adicionado!');
       closeModal();
       await loadStore(currentStore);
       e.target.reset();
     } catch (error) {
-      alert('❌ Erro ao adicionar produto: ' + error.message);
+      console.error('❌ ERRO:', error);
+      alert('❌ Erro: ' + error.message);
     }
   });
 
+  async function editProduct(prodId) {
+    try {
+      const prodDoc = await db.collection('produtos').doc(prodId).get();
+      if (!prodDoc.exists) {
+        alert('❌ Produto não encontrado');
+        return;
+      }
+
+      const prod = prodDoc.data();
+      document.getElementById('prodName').value = prod.nome || '';
+      document.getElementById('prodDescription').value = prod.descricao || '';
+      document.getElementById('prodCategory').value = prod.categoria || '';
+      document.getElementById('prodPrice').value = prod.preco || '';
+      document.getElementById('prodPromo').value = prod.promocao || '';
+      document.getElementById('prodImage').value = prod.imagem || '';
+      document.getElementById('prodStock').value = prod.estoque || '0';
+
+      document.querySelector('#modal-addProduct h2').textContent = '✏️ Editar';
+      
+      const oldForm = document.getElementById('productForm');
+      const newForm = oldForm.cloneNode(true);
+      oldForm.parentNode.replaceChild(newForm, oldForm);
+
+      document.getElementById('productForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        try {
+          await db.collection('produtos').doc(prodId).update({
+            nome: document.getElementById('prodName').value,
+            descricao: document.getElementById('prodDescription').value,
+            categoria: document.getElementById('prodCategory').value,
+            preco: parseFloat(document.getElementById('prodPrice').value),
+            promocao: parseFloat(document.getElementById('prodPromo').value) || 0,
+            imagem: document.getElementById('prodImage').value,
+            estoque: parseInt(document.getElementById('prodStock').value)
+          });
+
+          alert('✅ Atualizado!');
+          await atualizarProdutosCount(currentStore);
+          closeModal();
+          await loadStore(currentStore);
+        } catch (error) {
+          alert('❌ Erro: ' + error.message);
+        }
+      });
+
+      openModal('addProduct');
+    } catch (error) {
+      alert('❌ Erro: ' + error.message);
+    }
+  }
+
   async function deleteProduct(prodId) {
-    if (confirm('Tem certeza que deseja deletar este produto?')) {
+    if (confirm('Deletar?')) {
       try {
         await db.collection('produtos').doc(prodId).delete();
-        alert('✅ Produto deletado!');
+        await atualizarProdutosCount(currentStore);
+        alert('✅ Deletado!');
         await loadStore(currentStore);
       } catch (error) {
         alert('❌ Erro: ' + error.message);
@@ -966,76 +1037,26 @@ if (!lojaId && lojas.length > 0) {
     }
   }
 
-  // ===== UTILITY FUNCTIONS =====
   function switchTab(tabName) {
-    // Hide all tabs
-    document.querySelectorAll('.tab-content').forEach(tab => {
-      tab.classList.remove('active');
-    });
-    
-    // Remove active from all nav links
-    document.querySelectorAll('.nav-link').forEach(link => {
-      link.classList.remove('active');
-    });
-    
-    // Show selected tab
-    const tabEl = document.getElementById(`tab-${tabName}`);
-    if (tabEl) {
-      tabEl.classList.add('active');
-    }
-    
-    // Mark nav link as active
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    const tab = document.getElementById(`tab-${tabName}`);
+    if (tab) tab.classList.add('active');
     event.target.closest('.nav-link').classList.add('active');
   }
 
-  function openModal(modalId) {
-    document.getElementById(`modal-${modalId}`).classList.add('show');
-  }
+  function openModal(id) { document.getElementById(`modal-${id}`).classList.add('show'); }
+  function closeModal() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
+  function changeStore() { const id = document.getElementById('storeSelect').value; if (id) loadStore(id); }
+  async function logout() { try { await auth.signOut(); window.location.href = '/auth.html'; } catch (e) { alert(e.message); } }
 
-  function closeModal() {
-    document.querySelectorAll('.modal').forEach(modal => {
-      modal.classList.remove('show');
-    });
-  }
-
-  function changeStore() {
-    const lojaId = document.getElementById('storeSelect').value;
-    if (lojaId) {
-      loadStore(lojaId);
-    }
-  }
-
-  function toggleSidebar() {
-    document.querySelector('.sidebar').classList.toggle('show');
-  }
-
-  function upgradePlan() {
-    alert('Funcionalidade em desenvolvimento. Logo você poderá fazer upgrade!');
-  }
-
-  async function logout() {
-    try {
-      await auth.signOut();
-      window.location.href = '/auth.html';
-    } catch (error) {
-      alert('Erro ao sair: ' + error.message);
-    }
-  }
-
-  // Close modal when clicking outside
   document.querySelectorAll('.modal').forEach(modal => {
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        modal.classList.remove('show');
-      }
-    });
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
   });
 
-// ===== MEU LINK DA LOJA =====
   function carregarLinkLoja() {
     if (!currentStore) return;
-    const dominio = window.location.origin;
-    const linkLoja = `${dominio}/loja/${currentStore}`;
+    const linkLoja = `${window.location.origin}/loja/${currentStore}`;
     const el = document.getElementById('linkLoja');
     if (el) el.value = linkLoja;
   }
@@ -1045,7 +1066,7 @@ if (!lojaId && lojas.length > 0) {
     if (el && el.value) {
       el.select();
       document.execCommand('copy');
-      alert('✅ Link copiado!');
+      alert('✅ Copiado!');
     }
   }
 
@@ -1056,29 +1077,26 @@ if (!lojaId && lojas.length > 0) {
 
   function compartilharWhatsApp() {
     const el = document.getElementById('linkLoja');
-    if (!el || !el.value) {
-      alert('❌ Link não carregado');
-      return;
-    }
-    const msg = encodeURIComponent(`Olá!\\n\\nVisita minha loja: ${el.value}\\n\\nAté logo!`);
+    if (!el || !el.value) return alert('❌ Link não carregado');
+    const msg = encodeURIComponent(`Olá!\n\nVisita minha loja: ${el.value}`);
     window.open(`https://wa.me/?text=${msg}`, '_blank');
   }
   
-  // Settings form
   document.getElementById('settingsForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
     try {
       await db.collection('lojas').doc(currentStore).update({
         nome: document.getElementById('storeName').value,
         descricao: document.getElementById('storeDescription').value,
         logo: document.getElementById('storeLogo').value
       });
-      alert('✅ Configurações salvas!');
+      alert('✅ Salvo!');
     } catch (error) {
       alert('❌ Erro: ' + error.message);
     }
   });
+
+  console.log('✅ Dashboard pronto');
 </script>
 
 </body>
