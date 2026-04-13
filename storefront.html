@@ -580,64 +580,98 @@
   
   // ===== INIT =====
   async function init() {
-    // Pegar loja_id da URL (aceita ?loja= ou ?lojaId=)
-    const params = new URLSearchParams(window.location.search);
-    lojaId = params.get('loja') || params.get('lojaId') || localStorage.getItem('lojaId');
+  console.log('🚀 Iniciando storefront');
+  console.log('📍 URL:', window.location.href);
+  console.log('📍 Pathname:', window.location.pathname);
+  console.log('📍 Search:', window.location.search);
+  
+  // Pegar loja_id da URL
+  const params = new URLSearchParams(window.location.search);
+  lojaId = params.get('loja') || params.get('lojaId') || localStorage.getItem('lojaId');
+  
+  console.log('1️⃣ lojaId do params:', lojaId);
 
-    // Também aceita /loja/abc123 no path
-    if (!lojaId) {
-      const path = window.location.pathname;
-      const matches = path.match(/\/loja\/([^/]+)/);
-      if (matches) {
-        lojaId = matches[1];
-      }
+  // Também aceita /loja/abc123 no path
+  if (!lojaId) {
+    const path = window.location.pathname;
+    console.log('2️⃣ Tentando extrair do path:', path);
+    
+    // ✅ REGEX CORRIGIDO - aceita qualquer coisa
+    const matches = path.match(/\/loja\/([^/]+)/);
+    
+    if (matches) {
+      lojaId = matches[1];
+      console.log('3️⃣ lojaId extraído do path:', lojaId);
     }
+  }
 
-    if (!lojaId) {
+  console.log('4️⃣ lojaId final:', lojaId);
+
+  if (!lojaId) {
+    console.error('❌ Nenhum lojaId encontrado!');
+    document.getElementById('productsContainer').innerHTML = `
+      <div class="empty-state">
+        <h2>Loja não encontrada</h2>
+        <p>Nenhuma loja disponível neste link</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Carregar dados da loja
+  try {
+    console.log('5️⃣ Buscando dados da loja:', lojaId);
+    
+    const lojaDoc = await db.collection('lojas').doc(lojaId).get();
+    
+    if (!lojaDoc.exists) {
+      console.error('❌ Loja não existe no Firestore:', lojaId);
       document.getElementById('productsContainer').innerHTML = `
         <div class="empty-state">
           <h2>Loja não encontrada</h2>
-          <p>Nenhuma loja disponível neste link</p>
+          <p>ID: ${lojaId}</p>
         </div>
       `;
       return;
     }
 
-    // Carregar dados da loja
-    try {
-      const lojaDoc = await db.collection('lojas').doc(lojaId).get();
-      if (!lojaDoc.exists) {
-        document.getElementById('productsContainer').innerHTML = `
-          <div class="empty-state">
-            <h2>Loja não encontrada</h2>
-          </div>
-        `;
-        return;
-      }
+    storeData = lojaDoc.data();
+    console.log('6️⃣ Dados da loja:', storeData);
+    
+    document.getElementById('storeTitle').textContent = storeData.nome || 'Loja Online';
+    document.getElementById('storeDesc').textContent = storeData.descricao || 'Bem-vindo!';
+    document.getElementById('logoName').textContent = (storeData.logo ? '🏪' : '🛍️') + ' ' + storeData.nome;
+    document.title = storeData.nome;
 
-      storeData = lojaDoc.data();
-      document.getElementById('storeTitle').textContent = storeData.nome || 'Loja Online';
-      document.getElementById('storeDesc').textContent = storeData.descricao || 'Bem-vindo!';
-      document.getElementById('logoName').textContent = (storeData.logo ? '🏪' : '🛍️') + ' ' + storeData.nome;
-      document.title = storeData.nome;
+    // Carregar produtos
+    console.log('7️⃣ Buscando produtos com loja_id:', lojaId);
+    
+    const prodsSnapshot = await db.collection('produtos')
+      .where('loja_id', '==', lojaId)
+      .get();
 
-      // Carregar produtos
-      const prodsSnapshot = await db.collection('produtos')
-        .where('loja_id', '==', lojaId)
-        .get();
+    console.log('8️⃣ Total de produtos encontrados:', prodsSnapshot.size);
 
-      produtos = [];
-      prodsSnapshot.forEach(doc => {
-        produtos.push({ id: doc.id, ...doc.data() });
-      });
+    produtos = [];
+    prodsSnapshot.forEach(doc => {
+      const prodData = doc.data();
+      console.log('   Produto:', doc.id, prodData);
+      produtos.push({ id: doc.id, ...prodData });
+    });
 
-      renderProducts(produtos);
-      populateCategories();
+    console.log('9️⃣ Array de produtos:', produtos);
 
-    } catch (error) {
-      console.error('Erro ao carregar loja:', error);
-    }
+    renderProducts(produtos);
+    populateCategories();
+    
+    console.log('✅ Storefront carregado com sucesso!');
+
+  } catch (error) {
+    console.error('❌ ERRO ao carregar loja:', error);
+    console.error('   Código:', error.code);
+    console.error('   Mensagem:', error.message);
   }
+}
 
   function populateCategories() {
     const categories = [...new Set(produtos.map(p => p.categoria))];
