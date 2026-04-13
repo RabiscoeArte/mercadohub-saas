@@ -1,1 +1,29 @@
+let msg = `🛒 *NOVO PEDIDO* \n\n`;
+    carrinho.forEach(item => {
+      msg += `• ${item.nome} x${item.qtd} - R$ ${(item.preco * item.qtd).toFixed(2)}\n`;
+    });
 
+    msg += `\n💰 Total: R$ ${total.toFixed(2)}`;
+    msg += `\n\n👤 Nome: ${nome}`;
+    msg += `\n📧 Email: ${email}`;
+    msg += `\n📍 Endereço: ${endereco}`;
+    msg += `\n💳 Pagamento: ${pagamento}`;
+
+    const numero = storeData.whatsapp || "5585994083703";
+    const url = `https://wa.me/${numero}?text=${encodeURIComponent(msg)}`;
+
+
+      encontrei o numero em storefront ( porem cada loja tem que ter seu proprio telefone em separado ) como resolver sem quebrar a estrutura, adicionar campo no cadastro ou na dashbord?
+
+
+                            erro menu da dashboard 
+
+                            ✅ Dashboard pronto
+dashboard.html?loja=muKzXOY0HpRAlxKBWPvc:865 🔄 Carregando loja: muKzXOY0HpRAlxKBWPvc
+dashboard.html?loja=muKzXOY0HpRAlxKBWPvc:590 Uncaught ReferenceError: toggleSidebar is not defined
+    at HTMLButtonElement.onclick (dashboard.html?loja=muKzXOY0HpRAlxKBWPvc:590:69)
+
+
+como vamos melhorar este link disto https://mercadohub-saas.vercel.app/loja/muKzXOY0HpRAlxKBWPvc para isto tipo https://mercadohub-saas.vercel.app/loja/mercadinho-bom-preco
+
+logo da loja em parte superior a esquerda ao imver do nome (🏪 Mercadinho Bom Preço) na dashboard ja existe o campo para enviar a imagem mais o mesmo não vai para storefront
