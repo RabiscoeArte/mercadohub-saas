@@ -467,11 +467,8 @@
 
 <!-- HEADER -->
 <header>
-  <!-- ✅ Deve ser:-->
-<div class="logo">
-  <img id="logoImg" src="" alt="Logo" style="height: 40px; display: none; border-radius: 8px;">
-  <span id="logoName">🛍️ Loja</span>
-</div>
+  <div class="header-content">
+    <img id="logoImg" src="" alt="Logo" style="height: 50px; display: none; border-radius: 8px;">
     <button class="cart-btn" onclick="toggleCart()">
       🛒 Carrinho
       <span class="badge" id="cartBadge" style="display:none;">0</span>
@@ -662,19 +659,16 @@ document.title = storeData.nome;
 
 // ✅ MOSTRAR LOGO (se existir)
 const logoImg = document.getElementById('logoImg');
-const logoName = document.getElementById('logoName');
 
 if (storeData.logo && storeData.logo.trim() !== '') {
   // ✅ Tem logo: mostrar como imagem
   console.log('🖼️ Usando logo:', storeData.logo);
   logoImg.src = storeData.logo;
   logoImg.style.display = 'block';
-  logoName.textContent = storeData.nome;
 } else {
-  // ✅ Sem logo: mostrar emoji + nome
-  console.log('ℹ️ Sem logo, usando emoji');
+  // ✅ Sem logo: mostrar emoji padrão
+  console.log('ℹ️ Sem logo, usando padrão');
   logoImg.style.display = 'none';
-  logoName.textContent = (storeData.logo ? '🏪' : '🛍️') + ' ' + storeData.nome;
 }
     
     // Carregar produtos
