@@ -587,7 +587,7 @@
     // Também aceita /loja/abc123 no path
     if (!lojaId) {
       const path = window.location.pathname;
-      const matches = path.match(/\/loja\/([^/]+)/);
+      const matches = path.match(/\/loja\/([a-zA-Z0-9]+)/);
       if (matches) {
         lojaId = matches[1];
       }
