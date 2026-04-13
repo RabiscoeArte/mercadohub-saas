@@ -651,13 +651,30 @@ if (matches) {
       return;
     }
 
-    storeData = lojaDoc.data();
-    console.log('6️⃣ Dados da loja:', storeData);
-    
-    document.getElementById('storeTitle').textContent = storeData.nome || 'Loja Online';
-    document.getElementById('storeDesc').textContent = storeData.descricao || 'Bem-vindo!';
-    document.getElementById('logoName').textContent = (storeData.logo ? '🏪' : '🛍️') + ' ' + storeData.nome;
-    document.title = storeData.nome;
+    // ✅ CÓDIGO CORRETO:
+storeData = lojaDoc.data();
+console.log('6️⃣ Dados da loja:', storeData);
+
+document.getElementById('storeTitle').textContent = storeData.nome || 'Loja Online';
+document.getElementById('storeDesc').textContent = storeData.descricao || 'Bem-vindo!';
+document.title = storeData.nome;
+
+// ✅ MOSTRAR LOGO (se existir)
+const logoImg = document.getElementById('logoImg');
+const logoName = document.getElementById('logoName');
+
+if (storeData.logo && storeData.logo.trim() !== '') {
+  // ✅ Tem logo: mostrar como imagem
+  console.log('🖼️ Usando logo:', storeData.logo);
+  logoImg.src = storeData.logo;
+  logoImg.style.display = 'block';
+  logoName.textContent = storeData.nome;
+} else {
+  // ✅ Sem logo: mostrar emoji + nome
+  console.log('ℹ️ Sem logo, usando emoji');
+  logoImg.style.display = 'none';
+  logoName.textContent = (storeData.logo ? '🏪' : '🛍️') + ' ' + storeData.nome;
+}
     
     // Carregar produtos
     console.log('7️⃣ Buscando produtos com loja_id:', lojaId);
