@@ -845,9 +845,9 @@
 
     msg += `\n💰 *Total:* R$ ${total.toFixed(2)}`;
     msg += `\n\n👤 *Nome:* ${nome}`;
-    msg += `\n📧 *Email:* ${email}`;
-    msg += `\n📍 *Endereço:* ${endereco}`;
-    msg += `\n💳 "Pagamento:* ${pagamento}`;
+    msg += `\n📩 *Email:* ${email}`;
+    msg += `\n🏡 *Endereço:* ${endereco}`;
+    msg += `\n💵 *Pagamento:* ${pagamento}`;
 
     const numero = storeData.whatsapp || "5585994083703";
     const url = `https://wa.me/${numero}?text=${encodeURIComponent(msg)}`;
