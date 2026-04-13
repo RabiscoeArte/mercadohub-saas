@@ -838,15 +838,16 @@
     const total = carrinho.reduce((t, i) => t + (i.preco * i.qtd), 0);
 
     let msg = `🛒 *NOVO PEDIDO* \n\n`;
+    msg += `🛍️ *Pedido*\n`;
     carrinho.forEach(item => {
       msg += `• ${item.nome} x${item.qtd} - R$ ${(item.preco * item.qtd).toFixed(2)}\n`;
     });
 
-    msg += `\n💰 Total: R$ ${total.toFixed(2)}`;
-    msg += `\n\n👤 Nome: ${nome}`;
-    msg += `\n📧 Email: ${email}`;
-    msg += `\n📍 Endereço: ${endereco}`;
-    msg += `\n💳 Pagamento: ${pagamento}`;
+    msg += `\n💰 *Total:* R$ ${total.toFixed(2)}`;
+    msg += `\n\n👤 *Nome:* ${nome}`;
+    msg += `\n📧 *Email:* ${email}`;
+    msg += `\n📍 *Endereço:* ${endereco}`;
+    msg += `\n💳 "Pagamento:* ${pagamento}`;
 
     const numero = storeData.whatsapp || "5585994083703";
     const url = `https://wa.me/${numero}?text=${encodeURIComponent(msg)}`;
