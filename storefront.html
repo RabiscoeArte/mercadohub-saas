@@ -651,23 +651,14 @@ if (matches) {
       return;
     }
 
-    // ✅ NOVO (mostra logo como imagem):
-storeData = lojaDoc.data();
-document.getElementById('storeTitle').textContent = storeData.nome || 'Loja Online';
-
-// ✅ MOSTRAR LOGO
-if (storeData.logo && storeData.logo.trim()) {
-  // Se tem logo, mostrar como imagem
-  console.log('🖼️ Usando logo:', storeData.logo);
-  document.getElementById('logoImg').src = storeData.logo;
-  document.getElementById('logoImg').style.display = 'block';
-} else {
-  // Se não tem logo, mostrar emoji + nome
-  console.log('ℹ️ Sem logo, usando emoji');
-  document.getElementById('logoImg').style.display = 'none';
-}
-
-document.getElementById('logoName').textContent = storeData.nome || 'Loja Online';
+    storeData = lojaDoc.data();
+    console.log('6️⃣ Dados da loja:', storeData);
+    
+    document.getElementById('storeTitle').textContent = storeData.nome || 'Loja Online';
+    document.getElementById('storeDesc').textContent = storeData.descricao || 'Bem-vindo!';
+    document.getElementById('logoName').textContent = (storeData.logo ? '🏪' : '🛍️') + ' ' + storeData.nome;
+    document.title = storeData.nome;
+    
     // Carregar produtos
     console.log('7️⃣ Buscando produtos com loja_id:', lojaId);
     
