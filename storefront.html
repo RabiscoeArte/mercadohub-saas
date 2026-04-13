@@ -838,7 +838,6 @@
     const total = carrinho.reduce((t, i) => t + (i.preco * i.qtd), 0);
 
     let msg = `🛒 *NOVO PEDIDO* \n\n`;
-    msg += `\n🛍️*Pedido:*;
     carrinho.forEach(item => {
       msg += `• ${item.nome} x${item.qtd} - R$ ${(item.preco * item.qtd).toFixed(2)}\n`;
     });
