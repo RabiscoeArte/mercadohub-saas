@@ -574,19 +574,16 @@
   </div>
 </div>
 
-<!-- COLE TODO ESTE CÓDIGO NO SEU storefront.html -->
-<!-- SUBSTITUA APENAS O <script> FINAL -->
-
 <script>
   // ===== FIREBASE CONFIG =====
   const firebaseConfig = {
-    apiKey: "AIzaSyDaZWj9ApORih26Pb4x-46ilrtxEXxQfm0",
-    authDomain: "mercado-hub-90a82.firebaseapp.com",
-    projectId: "mercado-hub-90a82",
-    storageBucket: "mercado-hub-90a82.firebasestorage.app",
-    messagingSenderId: "872416491456",
-    appId: "1:872416491456:web:29c37a42cfeeb40a087a25"
-  };
+  apiKey: "AIzaSyDaZWj9ApORih26Pb4x-46ilrtxEXxQfm0",
+  authDomain: "mercado-hub-90a82.firebaseapp.com",
+  projectId: "mercado-hub-90a82",
+  storageBucket: "mercado-hub-90a82.firebasestorage.app",
+  messagingSenderId: "872416491456",
+  appId: "1:872416491456:web:29c37a42cfeeb40a087a25"
+};
 
   const app = firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
@@ -595,140 +592,150 @@
   let carrinho = [];
   let lojaId = null;
   let storeData = null;
-
-  // ===== CAROUSEL BANNERS =====
-  let currentBannerIndex = 0;
-  let bannerAutoplayInterval = null;
-
+  
   // ===== INIT =====
   async function init() {
-    console.log('🚀 Iniciando storefront');
-    console.log('📍 URL:', window.location.href);
-    console.log('📍 Pathname:', window.location.pathname);
-    console.log('📍 Search:', window.location.search);
+  // ✅ ADICIONAR ESTA LINHA:
+  await carregarBanners();
+  console.log('🚀 Iniciando storefront');
+  console.log('📍 URL:', window.location.href);
+  console.log('📍 Pathname:', window.location.pathname);
+  console.log('📍 Search:', window.location.search);
+  
+  // Pegar loja_id da URL
+  const params = new URLSearchParams(window.location.search);
+  lojaId = params.get('loja') || params.get('lojaId') || localStorage.getItem('lojaId');
+  
+  console.log('1️⃣ lojaId do params:', lojaId);
+
+  // Também aceita /loja/abc123 no path
+  if (!lojaId) {
+    const path = window.location.pathname;
+    console.log('2️⃣ Tentando extrair do path:', path);
     
-    // Pegar loja_id da URL
-    const params = new URLSearchParams(window.location.search);
-    lojaId = params.get('loja') || params.get('lojaId') || localStorage.getItem('lojaId');
+    // ✅ REGEX CORRIGIDO - aceita qualquer coisa
+    // ✅ NOVO (tenta slug PRIMEIRO, depois ID):
+const matches = path.match(/\/loja\/([^/]+)/);
+if (matches) {
+  const slugOuId = matches[1];
+  
+  console.log('🔍 Procurando loja com slug:', slugOuId);
+  
+  // Primeiro tenta buscar por SLUG
+  const slugQuery = await db.collection('lojas')
+    .where('slug', '==', slugOuId)
+    .get();
+  
+  if (!slugQuery.empty) {
+    // Encontrou por slug
+    lojaId = slugQuery.docs[0].id;
+    console.log('✅ Loja encontrada por slug, ID:', lojaId);
+  } else {
+    // Se não encontrou por slug, tenta por ID
+    lojaId = slugOuId;
+    console.log('ℹ️ Slug não encontrado, tentando como ID:', lojaId);
+  }
+}
+  }
+
+  console.log('4️⃣ lojaId final:', lojaId);
+
+  if (!lojaId) {
+    console.error('❌ Nenhum lojaId encontrado!');
+    document.getElementById('productsContainer').innerHTML = `
+      <div class="empty-state">
+        <h2>Loja não encontrada</h2>
+        <p>Nenhuma loja disponível neste link</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Carregar dados da loja
+  try {
+    console.log('5️⃣ Buscando dados da loja:', lojaId);
     
-    console.log('1️⃣ lojaId do params:', lojaId);
-
-    // Também aceita /loja/abc123 no path
-    if (!lojaId) {
-      const path = window.location.pathname;
-      console.log('2️⃣ Tentando extrair do path:', path);
-      
-      const matches = path.match(/\/loja\/([^/]+)/);
-      if (matches) {
-        const slugOuId = matches[1];
-        
-        console.log('🔍 Procurando loja com slug:', slugOuId);
-        
-        // Primeiro tenta buscar por SLUG
-        const slugQuery = await db.collection('lojas')
-          .where('slug', '==', slugOuId)
-          .get();
-        
-        if (!slugQuery.empty) {
-          lojaId = slugQuery.docs[0].id;
-          console.log('✅ Loja encontrada por slug, ID:', lojaId);
-        } else {
-          lojaId = slugOuId;
-          console.log('ℹ️ Slug não encontrado, tentando como ID:', lojaId);
-        }
-      }
-    }
-
-    console.log('4️⃣ lojaId final:', lojaId);
-
-    if (!lojaId) {
-      console.error('❌ Nenhum lojaId encontrado!');
+    const lojaDoc = await db.collection('lojas').doc(lojaId).get();
+    
+    if (!lojaDoc.exists) {
+      console.error('❌ Loja não existe no Firestore:', lojaId);
       document.getElementById('productsContainer').innerHTML = `
         <div class="empty-state">
           <h2>Loja não encontrada</h2>
-          <p>Nenhuma loja disponível neste link</p>
+          <p>ID: ${lojaId}</p>
         </div>
       `;
       return;
     }
 
-    // Carregar dados da loja
-    try {
-      console.log('5️⃣ Buscando dados da loja:', lojaId);
-      
-      const lojaDoc = await db.collection('lojas').doc(lojaId).get();
-      
-      if (!lojaDoc.exists) {
-        console.error('❌ Loja não existe no Firestore:', lojaId);
-        document.getElementById('productsContainer').innerHTML = `
-          <div class="empty-state">
-            <h2>Loja não encontrada</h2>
-            <p>ID: ${lojaId}</p>
-          </div>
-        `;
-        return;
-      }
+    // ✅ CÓDIGO CORRETO:
+storeData = lojaDoc.data();
+console.log('6️⃣ Dados da loja:', storeData);
 
-      // ✅ CORRIGIDO: Armazenar storeData PRIMEIRO
-      storeData = lojaDoc.data();
-      console.log('6️⃣ Dados da loja:', storeData);
-      
-      // ✅ Atualizar título e descrição
-      document.getElementById('storeTitle').textContent = storeData.nome || 'Loja Online';
-      document.getElementById('storeDesc').textContent = storeData.descricao || 'Bem-vindo!';
-      document.title = storeData.nome;
+document.getElementById('storeTitle').textContent = storeData.nome || 'Loja Online';
+document.getElementById('storeDesc').textContent = storeData.descricao || 'Bem-vindo!';
+document.title = storeData.nome;
 
-      // ✅ CORRIGIDO: Carregar LOGO ANTES de carregar banners
-      console.log('🖼️ Carregando logo...');
-      const logoImg = document.getElementById('logoImg');
-      if (logoImg && storeData.logo && storeData.logo.trim() !== '') {
-        logoImg.src = storeData.logo;
-        logoImg.style.display = 'block';
-        console.log('✅ Logo carregada');
-      } else {
-        if (logoImg) logoImg.style.display = 'none';
-        console.log('ℹ️ Sem logo configurada');
-      }
+// ✅ MOSTRAR LOGO (se existir)
+const logoImg = document.getElementById('logoImg');
 
-      // ✅ CORRIGIDO: Carregar BANNERS DEPOIS
-      console.log('📌 Carregando banners...');
-      await carregarBanners(storeData);
+if (storeData.logo && storeData.logo.trim() !== '') {
+  // ✅ Tem logo: mostrar como imagem
+  console.log('🖼️ Usando logo:', storeData.logo);
+  logoImg.src = storeData.logo;
+  logoImg.style.display = 'block';
+} else {
+  // ✅ Sem logo: mostrar emoji padrão
+  console.log('ℹ️ Sem logo, usando padrão');
+  logoImg.style.display = 'none';
+}
+    
+    // Carregar produtos
+    console.log('7️⃣ Buscando produtos com loja_id:', lojaId);
+    
+    const prodsSnapshot = await db.collection('produtos')
+      .where('loja_id', '==', lojaId)
+      .get();
 
-      // Carregar produtos
-      console.log('7️⃣ Buscando produtos com loja_id:', lojaId);
-      
-      const prodsSnapshot = await db.collection('produtos')
-        .where('loja_id', '==', lojaId)
-        .get();
+    console.log('8️⃣ Total de produtos encontrados:', prodsSnapshot.size);
 
-      console.log('8️⃣ Total de produtos encontrados:', prodsSnapshot.size);
+    produtos = [];
+    prodsSnapshot.forEach(doc => {
+      const prodData = doc.data();
+      console.log('   Produto:', doc.id, prodData);
+      produtos.push({ id: doc.id, ...prodData });
+    });
 
-      produtos = [];
-      prodsSnapshot.forEach(doc => {
-        const prodData = doc.data();
-        console.log('   Produto:', doc.id, prodData);
-        produtos.push({ id: doc.id, ...prodData });
-      });
+    console.log('9️⃣ Array de produtos:', produtos);
 
-      console.log('9️⃣ Array de produtos:', produtos);
+    renderProducts(produtos);
+    populateCategories();
+    
+    console.log('✅ Storefront carregado com sucesso!');
 
-      renderProducts(produtos);
-      populateCategories();
-      
-      console.log('✅ Storefront carregado com sucesso!');
-
-    } catch (error) {
-      console.error('❌ ERRO ao carregar loja:', error);
-      console.error('   Código:', error.code);
-      console.error('   Mensagem:', error.message);
-    }
+  } catch (error) {
+    console.error('❌ ERRO ao carregar loja:', error);
+    console.error('   Código:', error.code);
+    console.error('   Mensagem:', error.message);
   }
+}
 
-  // ===== CARREGAR BANNERS =====
-  async function carregarBanners(loja) {
-    try {
-      console.log('📌 Carregando banners...');
+// ===== CAROUSEL DE BANNERS =====
+let currentBannerIndex = 0;
+let bannerAutoplayInterval = null;
 
+async function carregarBanners() {
+  try {
+    if (!lojaId) return;
+
+    console.log('📌 Carregando banners para:', lojaId);
+
+    const lojaDoc = await db.collection('lojas').doc(lojaId).get();
+    
+    if (lojaDoc.exists) {
+      const loja = lojaDoc.data();
+      
+      // Verificar se tem banners
       if (loja.banner1 && loja.banner1.trim() !== '') {
         console.log('✅ Banners encontrados');
         
@@ -743,7 +750,7 @@
         // Mostrar primeiro banner
         mostrarBanner(0);
         
-        // Iniciar autoplay
+        // Iniciar autoplay (trocar a cada 5 segundos)
         iniciarAutoplay();
         
         console.log('🎨 Carousel iniciado');
@@ -751,73 +758,72 @@
         console.log('ℹ️ Sem banners configurados');
         document.getElementById('bannerCarousel').style.display = 'none';
       }
-    } catch (error) {
-      console.error('❌ Erro ao carregar banners:', error);
     }
+  } catch (error) {
+    console.error('❌ Erro ao carregar banners:', error);
   }
+}
 
-  // ===== FUNÇÕES DO CAROUSEL =====
-  function mostrarBanner(index) {
-    console.log('📸 Exibindo banner:', index);
-    
-    currentBannerIndex = index;
-    
-    // Ocultar todas as imagens
-    document.getElementById('bannerImg1').style.opacity = '0';
-    document.getElementById('bannerImg2').style.opacity = '0';
-    document.getElementById('bannerImg3').style.opacity = '0';
-    
-    // Mostrar banner atual
-    const imgs = [
-      document.getElementById('bannerImg1'),
-      document.getElementById('bannerImg2'),
-      document.getElementById('bannerImg3')
-    ];
-    
-    if (imgs[index]) {
-      imgs[index].style.opacity = '1';
+function mostrarBanner(index) {
+  console.log('📸 Exibindo banner:', index);
+  
+  currentBannerIndex = index;
+  
+  // Ocultar todas as imagens
+  document.getElementById('bannerImg1').style.opacity = '0';
+  document.getElementById('bannerImg2').style.opacity = '0';
+  document.getElementById('bannerImg3').style.opacity = '0';
+  
+  // Mostrar banner atual
+  const imgs = [
+    document.getElementById('bannerImg1'),
+    document.getElementById('bannerImg2'),
+    document.getElementById('bannerImg3')
+  ];
+  
+  if (imgs[index]) {
+    imgs[index].style.opacity = '1';
+  }
+  
+  // Atualizar dots
+  const dots = document.querySelectorAll('.banner-dot');
+  dots.forEach((dot, i) => {
+    if (i === index) {
+      dot.style.background = '#ff6b35';
+      dot.style.transform = 'scale(1.2)';
+    } else {
+      dot.style.background = '#ddd';
+      dot.style.transform = 'scale(1)';
     }
-    
-    // Atualizar dots
-    const dots = document.querySelectorAll('.banner-dot');
-    dots.forEach((dot, i) => {
-      if (i === index) {
-        dot.style.background = '#ff6b35';
-        dot.style.transform = 'scale(1.2)';
-      } else {
-        dot.style.background = '#ddd';
-        dot.style.transform = 'scale(1)';
-      }
-    });
-  }
+  });
+}
 
-  function goToBanner(index) {
-    console.log('🔄 Ir para banner:', index);
-    mostrarBanner(index);
-    reiniciarAutoplay();
-  }
+function goToBanner(index) {
+  console.log('🔄 Ir para banner:', index);
+  mostrarBanner(index);
+  reiniciarAutoplay();
+}
 
-  function proximoBanner() {
-    let proximo = (currentBannerIndex + 1) % 3;
-    mostrarBanner(proximo);
-  }
+function proximoBanner() {
+  let proximo = (currentBannerIndex + 1) % 3;
+  mostrarBanner(proximo);
+}
 
-  function iniciarAutoplay() {
-    if (bannerAutoplayInterval) clearInterval(bannerAutoplayInterval);
-    
-    bannerAutoplayInterval = setInterval(() => {
-      proximoBanner();
-    }, 5000);
-    
-    console.log('▶️ Autoplay iniciado');
-  }
+function iniciarAutoplay() {
+  if (bannerAutoplayInterval) clearInterval(bannerAutoplayInterval);
+  
+  bannerAutoplayInterval = setInterval(() => {
+    proximoBanner();
+  }, 5000); // Trocar a cada 5 segundos
+  
+  console.log('▶️ Autoplay iniciado');
+}
 
-  function reiniciarAutoplay() {
-    if (bannerAutoplayInterval) clearInterval(bannerAutoplayInterval);
-    iniciarAutoplay();
-  }
+function reiniciarAutoplay() {
+  if (bannerAutoplayInterval) clearInterval(bannerAutoplayInterval);
+  iniciarAutoplay();
+}
 
-  // ===== RESTO DO CÓDIGO (igual ao original) =====
   function populateCategories() {
     const categories = [...new Set(produtos.map(p => p.categoria))];
     const select = document.getElementById('categoryFilter');
@@ -843,37 +849,37 @@
     }
 
     container.innerHTML = list.map(p => {
-      const preco = Number(p.preco) || 0;
-      const promo = Number(p.promocao) || 0;
-      const desconto = promo > 0 ? Math.round((1 - promo/preco) * 100) : 0;
+  const preco = Number(p.preco) || 0;
+  const promo = Number(p.promocao) || 0;
+  const desconto = promo > 0 ? Math.round((1 - promo/preco) * 100) : 0;
 
-      return `
-        <div class="product-card">
-          <div class="img-container">
-            ${promo > 0 ? `<span class="discount-badge">-${desconto}%</span>` : ``}
-            <img src="${p.imagem || 'https://via.placeholder.com/200'}" class="product-img" onerror="this.src='https://via.placeholder.com/200'">
-          </div>
+  return `
+    <div class="product-card">
+      <div class="img-container">
+        ${promo > 0 ? `<span class="discount-badge">-${desconto}%</span>` : ``}
+        <img src="${p.imagem || 'https://via.placeholder.com/200'}" class="product-img" onerror="this.src='https://via.placeholder.com/200'">
+      </div>
 
-          <div class="product-info">
-            <div class="product-name">${p.nome}</div>
-            <div class="product-desc">${p.descricao || ''}</div>
+      <div class="product-info">
+        <div class="product-name">${p.nome}</div>
+        <div class="product-desc">${p.descricao || ''}</div>
 
-            <div class="product-price">
-              ${promo > 0 ? `
-                <span class="price">R$ ${promo.toFixed(2)}</span>
-                <span class="price-old">R$ ${preco.toFixed(2)}</span>
-              ` : `
-                <span class="price">R$ ${preco.toFixed(2)}</span>
-              `}
-            </div>
-
-            <button class="add-btn" onclick="addCart('${p.id}', '${p.nome}', ${promo > 0 ? promo : preco})">
-              🛒 Adicionar
-            </button>
-          </div>
+        <div class="product-price">
+          ${promo > 0 ? `
+            <span class="price">R$ ${promo.toFixed(2)}</span>
+            <span class="price-old">R$ ${preco.toFixed(2)}</span>
+          ` : `
+            <span class="price">R$ ${preco.toFixed(2)}</span>
+          `}
         </div>
-      `;
-    }).join('');
+
+        <button class="add-btn" onclick="addCart('${p.id}', '${p.nome}', ${promo > 0 ? promo : preco})">
+          🛒 Adicionar
+        </button>
+      </div>
+    </div>
+  `;
+}).join('');
   }
 
   function filterProducts() {
@@ -934,17 +940,16 @@
 
     document.getElementById('checkoutForm').style.display = 'block';
 
-    container.innerHTML = carrinho.map(item => `
+    container.innerHTML = carrinho.map((item, idx) => `
       <div class="cart-item">
         <div class="cart-item-info">
           <div class="cart-item-name">${item.nome}</div>
           <div class="cart-item-price">R$ ${item.preco.toFixed(2)} x ${item.qtd}</div>
         </div>
         <div class="qty-control">
-          <button class="qty-btn" onclick="decreaseQty('${item.id}')">−</button>
-          <span style="min-width: 30px; text-align: center;">${item.qtd}</span>
-          <button class="qty-btn" onclick="increaseQty('${item.id}')">+</button>
-          <button class="qty-btn" onclick="removeCart('${item.id}')" style="background: #e53935; color: white;">🗑️</button>
+          <button type="button" class="qty-btn" onclick="changeQty(${idx}, '-')">−</button>
+          <span style="width:30px;text-align:center;">${item.qtd}</span>
+          <button type="button" class="qty-btn" onclick="changeQty(${idx}, '+')">+</button>
         </div>
       </div>
     `).join('');
@@ -952,73 +957,81 @@
     updateCartSummary();
   }
 
-  function increaseQty(prodId) {
-    const item = carrinho.find(i => i.id === prodId);
-    if (item) item.qtd++;
-    renderCart();
-  }
+  function changeQty(idx, op) {
+    if (op === '+') {
+      carrinho[idx].qtd++;
+    } else if (op === '-') {
+      carrinho[idx].qtd--;
+      if (carrinho[idx].qtd <= 0) {
+        carrinho.splice(idx, 1);
+      }
+    }
 
-  function decreaseQty(prodId) {
-    const item = carrinho.find(i => i.id === prodId);
-    if (item && item.qtd > 1) item.qtd--;
-    renderCart();
-  }
-
-  function removeCart(prodId) {
-    carrinho = carrinho.filter(i => i.id !== prodId);
     updateCartBadge();
     renderCart();
   }
 
   function updateCartSummary() {
-    const subtotal = carrinho.reduce((sum, item) => sum + (item.preco * item.qtd), 0);
-    const total = subtotal;
-
+    const subtotal = carrinho.reduce((t, i) => t + (i.preco * i.qtd), 0);
     document.getElementById('subtotal').textContent = subtotal.toFixed(2);
-    document.getElementById('total').textContent = total.toFixed(2);
+    document.getElementById('total').textContent = subtotal.toFixed(2);
   }
 
-  document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
+  document.getElementById('checkoutForm').addEventListener('submit', (e) => {
     e.preventDefault();
-    
-    if (carrinho.length === 0) {
-      alert('Carrinho vazio!');
-      return;
-    }
 
-    const totalValue = carrinho.reduce((sum, item) => sum + (item.preco * item.qtd), 0);
-    
-    let mensagem = '🛒 *Pedido MercadoHub*\n\n';
+    const nome = document.getElementById('customerName').value;
+    const email = document.getElementById('customerEmail').value;
+    const telefone = document.getElementById('customerPhone').value;
+    const endereco = document.getElementById('customerAddress').value;
+    const pagamento = document.getElementById('paymentMethod').value;
+
+    const total = carrinho.reduce((t, i) => t + (i.preco * i.qtd), 0);
+
+    let msg = `🛒 *NOVO PEDIDO* \n\n`;
+    msg += `🛍️ *Pedido*\n`;
     carrinho.forEach(item => {
-      mensagem += `• ${item.nome} x${item.qtd} = R$ ${(item.preco * item.qtd).toFixed(2)}\n`;
+      msg += `• ${item.nome} x${item.qtd} - R$ ${(item.preco * item.qtd).toFixed(2)}\n`;
     });
-    mensagem += `\n*Total: R$ ${totalValue.toFixed(2)}*\n\n`;
-    mensagem += `📍 *Endereço:* ${document.getElementById('customerAddress').value}\n`;
-    mensagem += `💳 *Pagamento:* ${document.getElementById('paymentMethod').value}`;
 
-    const telefone = '55' + document.getElementById('customerPhone').value.replace(/\D/g, '');
-    const url = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
+    msg += `\n💰 *Total:* R$ ${total.toFixed(2)}`;
+    msg += `\n\n👤 *Nome:* ${nome}`;
+    msg += `\n📩 *Email:* ${email}`;
+    msg += `\n🏡 *Endereço:* ${endereco}`;
+    msg += `\n💵 *Pagamento:* ${pagamento}`;
+
+    const numero = storeData.whatsapp || "5585994083703";
+    const url = `https://wa.me/${numero}?text=${encodeURIComponent(msg)}`;
+
+    // Salvar pedido no Firestore
+    db.collection('pedidos').add({
+      loja_id: lojaId,
+      cliente: nome,
+      email: email,
+      telefone: telefone,
+      endereco: endereco,
+      pagamento: pagamento,
+      itens: carrinho.map(i => `${i.nome} x${i.qtd}`).join(', '),
+      total: total,
+      status: 'novo',
+      dataPedido: new Date()
+    }).catch(err => console.error('Erro ao salvar:', err));
+
     window.open(url, '_blank');
-
     carrinho = [];
     updateCartBadge();
     toggleCart();
-    document.getElementById('checkoutForm').reset();
   });
 
-  document.querySelectorAll('.modal').forEach(modal => {
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) modal.classList.remove('show');
-    });
+  // Fechar modal ao clicar fora
+  document.getElementById('cartModal').addEventListener('click', (e) => {
+    if (e.target.id === 'cartModal') {
+      toggleCart();
+    }
   });
 
-  // Chamar init quando página carregar
-  window.addEventListener('load', init);
-  
-  // Também chamar init imediatamente (em caso de cache)
+  // Iniciar
   init();
-
-  console.log('✅ Storefront script carregado');
 </script>
 
 </body>
