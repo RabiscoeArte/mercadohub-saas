@@ -634,8 +634,14 @@
         
         <div class="search-bar">
           <input type="text" id="searchProducts" placeholder="Buscar produtos...">
-          <button class="btn btn-primary" onclick="openModal('addProduct')">+ Novo Produto</button>
         </div>
+<!-- ✅ ADICIONAR ISTO: -->
+<div style="display: flex; gap: 1rem; margin-top: 1rem;">
+  <button onclick="openModal('addProduct')" class=" btn btn-primary">+ Novo Produto</button>
+  <button onclick="document.getElementById('csvFile').click()" class="btn btn-primary">📥 Importar CSV</button>
+  <button onclick="exportarCSV()" class="btn btn-primary">📥 Exportar CSV</button>
+  <input type="file" id="csvFile" accept=".csv" style="display:none;" onchange="importarCSV(event)">
+</div>
 
         <table class="table">
           <thead>
@@ -897,7 +903,6 @@
       renderProducts();
       updateMetrics(loja);
       
-      // ✅ ADICIONAR ESTAS LINHAS
       console.log('⏳ Carregando dados complementares...');
       await carregarLinkLoja();
       await loadPendingOrders();
@@ -1226,6 +1231,127 @@
       alert('❌ Erro: ' + error.message);
     }
   });
+
+  // ===== FUNÇÃO 5: IMPORTAR CSV =====
+  async function importarCSV(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    console.log('📥 Importando CSV:', file.name);
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const csv = e.target.result;
+        const linhas = csv.split('\n').map(l => l.trim()).filter(l => l);
+        
+        if (linhas.length < 2) {
+          alert('❌ CSV vazio ou inválido');
+          return;
+        }
+
+        const headers = linhas[0].split(',').map(h => h.trim().toLowerCase());
+        console.log('📋 Headers:', headers);
+
+        const obrigatorios = ['nome', 'preco', 'estoque'];
+        const temObrigatorios = obrigatorios.every(h => headers.includes(h));
+        
+        if (!temObrigatorios) {
+          alert('❌ CSV incompleto. Necessário: nome, preco, estoque');
+          return;
+        }
+
+        let importados = 0;
+        let erros = 0;
+
+        for (let i = 1; i < linhas.length; i++) {
+          try {
+            const valores = linhas[i].split(',').map(v => v.trim());
+            
+            const produto = {};
+            headers.forEach((header, idx) => {
+              if (header === 'preco' || header === 'promocao' || header === 'estoque') {
+                produto[header] = parseFloat(valores[idx]) || 0;
+              } else {
+                produto[header] = valores[idx] || '';
+              }
+            });
+
+            produto.loja_id = currentStore;
+            produto.dataCriacao = new Date();
+
+            console.log(`✅ Produto ${i}:`, produto);
+
+            await db.collection('produtos').add(produto);
+            importados++;
+
+          } catch (erro) {
+            console.error(`❌ Erro na linha ${i}:`, erro);
+            erros++;
+          }
+        }
+
+        if (importados > 0) {
+          await atualizarProdutosCount(currentStore);
+          await loadStore(currentStore);
+        }
+
+        alert(`✅ Importação completa!\n${importados} produtos adicionados\n${erros} erros`);
+        
+        document.getElementById('csvFile').value = '';
+
+      } catch (error) {
+        console.error('❌ Erro ao processar CSV:', error);
+        alert('❌ Erro ao processar CSV: ' + error.message);
+      }
+    };
+
+    reader.readAsText(file);
+  }
+
+  // ===== FUNÇÃO 6: EXPORTAR CSV =====
+  function exportarCSV() {
+    if (products.length === 0) {
+      alert('❌ Nenhum produto para exportar');
+      return;
+    }
+
+    console.log('📤 Exportando CSV com', products.length, 'produtos');
+
+    const headers = ['nome', 'descricao', 'categoria', 'preco', 'promocao', 'imagem', 'estoque'];
+    
+    const linhas = [headers.join(',')];
+    
+    products.forEach(p => {
+      const linha = [
+        `"${(p.nome || '').replace(/"/g, '""')}"`,
+        `"${(p.descricao || '').replace(/"/g, '""')}"`,
+        `"${(p.categoria || '').replace(/"/g, '""')}"`,
+        p.preco || 0,
+        p.promocao || 0,
+        `"${(p.imagem || '').replace(/"/g, '""')}"`,
+        p.estoque || 0
+      ];
+      linhas.push(linha.join(','));
+    });
+
+    const csv = linhas.join('\n');
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `produtos_${currentStore}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    console.log('✅ CSV exportado');
+    alert('✅ CSV exportado com sucesso!');
+  }
 
   console.log('✅ Dashboard pronto');
 </script>
