@@ -716,6 +716,24 @@
             <input type="url" id="storeLogo" placeholder="https://exemplo.com/logo.png">
           </div>
 
+<!-- ✅ BANNER 1 -->
+<div class="form-group">
+  <label for="banner1">Banner 1 (URL da imagem 1200x400)</label>
+  <input type="text" id="banner1" placeholder="https://...">
+</div>
+
+<!-- ✅ BANNER 2 -->
+<div class="form-group">
+  <label for="banner2">Banner 2 (URL da imagem 1200x400)</label>
+  <input type="text" id="banner2" placeholder="https://...">
+</div>
+
+<!-- ✅ BANNER 3 -->
+<div class="form-group">
+  <label for="banner3">Banner 3 (URL da imagem 1200x400)</label>
+  <input type="text" id="banner3" placeholder="https://...">
+</div>
+
           <button type="submit" class="btn btn-primary">Salvar Configurações</button>
         </form>
       </div>
@@ -1219,18 +1237,22 @@
   }
   
   document.getElementById('settingsForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try {
-      await db.collection('lojas').doc(currentStore).update({
-        nome: document.getElementById('storeName').value,
-        descricao: document.getElementById('storeDescription').value,
-        logo: document.getElementById('storeLogo').value
-      });
-      alert('✅ Salvo!');
-    } catch (error) {
-      alert('❌ Erro: ' + error.message);
-    }
-  });
+  e.preventDefault();
+  try {
+    await db.collection('lojas').doc(currentStore).update({
+      nome: document.getElementById('storeName').value,
+      descricao: document.getElementById('storeDescription').value,
+      logo: document.getElementById('storeLogo').value,
+      // ✅ ADICIONAR BANNERS:
+      banner1: document.getElementById('banner1').value,
+      banner2: document.getElementById('banner2').value,
+      banner3: document.getElementById('banner3').value
+    });
+    alert('✅ Configurações salvas!');
+  } catch (error) {
+    alert('❌ Erro: ' + error.message);
+  }
+});
 
   // ===== FUNÇÃO 5: IMPORTAR CSV =====
   async function importarCSV(event) {
@@ -1308,6 +1330,31 @@
 
     reader.readAsText(file);
   }
+
+// ===== CARREGAR CONFIGURAÇÕES =====
+function carregarConfiguracoes() {
+  try {
+    if (!currentStore) return;
+
+    db.collection('lojas').doc(currentStore).get().then(doc => {
+      if (doc.exists) {
+        const loja = doc.data();
+        
+        document.getElementById('storeName').value = loja.nome || '';
+        document.getElementById('storeDescription').value = loja.descricao || '';
+        document.getElementById('storeLogo').value = loja.logo || '';
+        // ✅ ADICIONAR ISTO:
+        document.getElementById('banner1').value = loja.banner1 || '';
+        document.getElementById('banner2').value = loja.banner2 || '';
+        document.getElementById('banner3').value = loja.banner3 || '';
+        
+        console.log('✅ Configurações carregadas');
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao carregar config:', error);
+  }
+}
 
   // ===== FUNÇÃO 6: EXPORTAR CSV =====
   function exportarCSV() {
