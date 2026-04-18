@@ -595,89 +595,131 @@
   
   // ===== INIT =====
   async function init() {
-  // ✅ ADICIONAR ESTA LINHA:
-  await carregarBanners();
-  console.log('🚀 Iniciando storefront');
-  console.log('📍 URL:', window.location.href);
-  console.log('📍 Pathname:', window.location.pathname);
-  console.log('📍 Search:', window.location.search);
-  
-  // Pegar loja_id da URL
-  const params = new URLSearchParams(window.location.search);
-  lojaId = params.get('loja') || params.get('lojaId') || localStorage.getItem('lojaId');
-  
-  console.log('1️⃣ lojaId do params:', lojaId);
-
-  // Também aceita /loja/abc123 no path
-  if (!lojaId) {
-    const path = window.location.pathname;
-    console.log('2️⃣ Tentando extrair do path:', path);
+    console.log('🚀 Iniciando storefront');
+    console.log('📍 URL:', window.location.href);
+    console.log('📍 Pathname:', window.location.pathname);
+    console.log('📍 Search:', window.location.search);
     
-    // ✅ REGEX CORRIGIDO - aceita qualquer coisa
-    // ✅ NOVO (tenta slug PRIMEIRO, depois ID):
-const matches = path.match(/\/loja\/([^/]+)/);
-if (matches) {
-  const slugOuId = matches[1];
-  
-  console.log('🔍 Procurando loja com slug:', slugOuId);
-  
-  // Primeiro tenta buscar por SLUG
-  const slugQuery = await db.collection('lojas')
-    .where('slug', '==', slugOuId)
-    .get();
-  
-  if (!slugQuery.empty) {
-    // Encontrou por slug
-    lojaId = slugQuery.docs[0].id;
-    console.log('✅ Loja encontrada por slug, ID:', lojaId);
-  } else {
-    // Se não encontrou por slug, tenta por ID
-    lojaId = slugOuId;
-    console.log('ℹ️ Slug não encontrado, tentando como ID:', lojaId);
-  }
-}
-  }
-
-  console.log('4️⃣ lojaId final:', lojaId);
-
-  if (!lojaId) {
-    console.error('❌ Nenhum lojaId encontrado!');
-    document.getElementById('productsContainer').innerHTML = `
-      <div class="empty-state">
-        <h2>Loja não encontrada</h2>
-        <p>Nenhuma loja disponível neste link</p>
-      </div>
-    `;
-    return;
-  }
-
-  // Carregar dados da loja
-  try {
-    console.log('5️⃣ Buscando dados da loja:', lojaId);
+    // Pegar loja_id da URL
+    const params = new URLSearchParams(window.location.search);
+    lojaId = params.get('loja') || params.get('lojaId') || localStorage.getItem('lojaId');
     
-    const lojaDoc = await db.collection('lojas').doc(lojaId).get();
-    
-    if (!lojaDoc.exists) {
-      console.error('❌ Loja não existe no Firestore:', lojaId);
+    console.log('1️⃣ lojaId do params:', lojaId);
+
+    // Também aceita /loja/abc123 no path
+    if (!lojaId) {
+      const path = window.location.pathname;
+      console.log('2️⃣ Tentando extrair do path:', path);
+      
+      const matches = path.match(/\/loja\/([^/]+)/);
+      if (matches) {
+        const slugOuId = matches[1];
+        
+        console.log('🔍 Procurando loja com slug:', slugOuId);
+        
+        // Primeiro tenta buscar por SLUG
+        const slugQuery = await db.collection('lojas')
+          .where('slug', '==', slugOuId)
+          .get();
+        
+        if (!slugQuery.empty) {
+          lojaId = slugQuery.docs[0].id;
+          console.log('✅ Loja encontrada por slug, ID:', lojaId);
+        } else {
+          lojaId = slugOuId;
+          console.log('ℹ️ Slug não encontrado, tentando como ID:', lojaId);
+        }
+      }
+    }
+
+    console.log('4️⃣ lojaId final:', lojaId);
+
+    if (!lojaId) {
+      console.error('❌ Nenhum lojaId encontrado!');
       document.getElementById('productsContainer').innerHTML = `
         <div class="empty-state">
           <h2>Loja não encontrada</h2>
-          <p>ID: ${lojaId}</p>
+          <p>Nenhuma loja disponível neste link</p>
         </div>
       `;
       return;
     }
 
-    // ✅ CÓDIGO CORRETO:
-storeData = lojaDoc.data();
-console.log('6️⃣ Dados da loja:', storeData);
+    // Carregar dados da loja
+    try {
+      console.log('5️⃣ Buscando dados da loja:', lojaId);
+      
+      const lojaDoc = await db.collection('lojas').doc(lojaId).get();
+      
+      if (!lojaDoc.exists) {
+        console.error('❌ Loja não existe no Firestore:', lojaId);
+        document.getElementById('productsContainer').innerHTML = `
+          <div class="empty-state">
+            <h2>Loja não encontrada</h2>
+            <p>ID: ${lojaId}</p>
+          </div>
+        `;
+        return;
+      }
 
-document.getElementById('storeTitle').textContent = storeData.nome || 'Loja Online';
-document.getElementById('storeDesc').textContent = storeData.descricao || 'Bem-vindo!';
-document.title = storeData.nome;
+      // ✅ STEP 1: Armazenar storeData PRIMEIRO
+      storeData = lojaDoc.data();
+      console.log('6️⃣ Dados da loja:', storeData);
 
-// ✅ MOSTRAR LOGO (se existir)
-const logoImg = document.getElementById('logoImg');
+      // ✅ STEP 2: Atualizar título e descrição
+      document.getElementById('storeTitle').textContent = storeData.nome || 'Loja Online';
+      document.getElementById('storeDesc').textContent = storeData.descricao || 'Bem-vindo!';
+      document.title = storeData.nome;
+
+      // ✅ STEP 3: Carregar LOGO (se existir)
+      console.log('🖼️ Carregando logo...');
+      const logoImg = document.getElementById('logoImg');
+      if (logoImg && storeData.logo && storeData.logo.trim() !== '') {
+        logoImg.src = storeData.logo;
+        logoImg.style.display = 'block';
+        console.log('✅ Logo carregada:', storeData.logo);
+      } else {
+        if (logoImg) logoImg.style.display = 'none';
+        console.log('ℹ️ Sem logo configurada');
+      }
+
+      // ✅ STEP 4: Carregar BANNERS (APÓS storeData estar pronto!)
+      console.log('📌 Carregando banners...');
+      await carregarBanners(storeData);
+
+      // ✅ STEP 5: Carregar PRODUTOS
+      console.log('7️⃣ Buscando produtos com loja_id:', lojaId);
+      
+      const prodsSnapshot = await db.collection('produtos')
+        .where('loja_id', '==', lojaId)
+        .get();
+
+      console.log('8️⃣ Total de produtos encontrados:', prodsSnapshot.size);
+
+      produtos = [];
+      prodsSnapshot.forEach(doc => {
+        const prodData = doc.data();
+        console.log('   Produto:', doc.id, prodData.nome);
+        produtos.push({ id: doc.id, ...prodData });
+      });
+
+      renderProducts(produtos);
+      populateCategories();
+      
+      console.log('✅ Storefront carregado com sucesso!');
+
+    } catch (error) {
+      console.error('❌ ERRO ao carregar loja:', error);
+      console.error('   Código:', error.code);
+      console.error('   Mensagem:', error.message);
+      document.getElementById('productsContainer').innerHTML = `
+        <div class="empty-state">
+          <h2>Erro ao carregar loja</h2>
+          <p>${error.message}</p>
+        </div>
+      `;
+    }
+  }
 
 if (storeData.logo && storeData.logo.trim() !== '') {
   // ✅ Tem logo: mostrar como imagem
@@ -724,79 +766,80 @@ if (storeData.logo && storeData.logo.trim() !== '') {
 let currentBannerIndex = 0;
 let bannerAutoplayInterval = null;
 
-async function carregarBanners() {
-  try {
-    if (!lojaId) return;
+  // ===== CAROUSEL BANNERS =====
+  async function carregarBanners(loja) {
+    try {
+      console.log('📌 Carregando banners...');
 
-    console.log('📌 Carregando banners para:', lojaId);
+      // ✅ SEMPRE MOSTRAR O CONTAINER (NUNCA ESCONDER)
+      const container = document.getElementById('bannerCarousel');
+      if (container) {
+        container.style.display = 'block';
+        console.log('✅ Container de banner visível');
+      }
 
-    const lojaDoc = await db.collection('lojas').doc(lojaId).get();
-    
-    if (lojaDoc.exists) {
-      const loja = lojaDoc.data();
-      
-      // Verificar se tem banners
-      if (loja.banner1 && loja.banner1.trim() !== '') {
+      // Verificar se tem banners configurados
+      if (loja && loja.banner1 && loja.banner1.trim() !== '') {
         console.log('✅ Banners encontrados');
+        console.log('   Banner 1:', loja.banner1);
+        console.log('   Banner 2:', loja.banner2 || '(igual ao 1)');
+        console.log('   Banner 3:', loja.banner3 || '(igual ao 1)');
         
         // Preencher imagens
-        document.getElementById('bannerImg1').src = loja.banner1;
-        document.getElementById('bannerImg2').src = loja.banner2 || loja.banner1;
-        document.getElementById('bannerImg3').src = loja.banner3 || loja.banner1;
+        const img1 = document.getElementById('bannerImg1');
+        const img2 = document.getElementById('bannerImg2');
+        const img3 = document.getElementById('bannerImg3');
         
-        // Mostrar carousel
-        document.getElementById('bannerCarousel').style.display = 'block';
+        if (img1) img1.src = loja.banner1;
+        if (img2) img2.src = loja.banner2 || loja.banner1;
+        if (img3) img3.src = loja.banner3 || loja.banner1;
         
         // Mostrar primeiro banner
         mostrarBanner(0);
         
-        // Iniciar autoplay (trocar a cada 5 segundos)
+        // Iniciar autoplay
         iniciarAutoplay();
         
-        console.log('🎨 Carousel iniciado');
+        console.log('🎨 Carousel iniciado com autoplay');
       } else {
-        console.log('ℹ️ Sem banners configurados');
-        document.getElementById('bannerCarousel').style.display = 'none';
+        console.log('ℹ️ Sem banners configurados, mostrando espaço vazio');
+        
+        // ✅ MANTER CONTAINER VISÍVEL mas com espaço vazio
+        if (bannerAutoplayInterval) clearInterval(bannerAutoplayInterval);
+        mostrarBanner(0); // Mostrar primeira imagem vazia
       }
+    } catch (error) {
+      console.error('❌ Erro ao carregar banners:', error);
+      console.error('   Stack:', error.stack);
     }
-  } catch (error) {
-    console.error('❌ Erro ao carregar banners:', error);
   }
-}
 
-function mostrarBanner(index) {
-  console.log('📸 Exibindo banner:', index);
-  
-  currentBannerIndex = index;
-  
-  // Ocultar todas as imagens
-  document.getElementById('bannerImg1').style.opacity = '0';
-  document.getElementById('bannerImg2').style.opacity = '0';
-  document.getElementById('bannerImg3').style.opacity = '0';
-  
-  // Mostrar banner atual
-  const imgs = [
-    document.getElementById('bannerImg1'),
-    document.getElementById('bannerImg2'),
-    document.getElementById('bannerImg3')
-  ];
-  
-  if (imgs[index]) {
-    imgs[index].style.opacity = '1';
-  }
-  
-  // Atualizar dots
-  const dots = document.querySelectorAll('.banner-dot');
-  dots.forEach((dot, i) => {
-    if (i === index) {
-      dot.style.background = '#ff6b35';
-      dot.style.transform = 'scale(1.2)';
-    } else {
-      dot.style.background = '#ddd';
-      dot.style.transform = 'scale(1)';
+  function mostrarBanner(index) {
+    console.log('📸 Exibindo banner:', index);
+    
+    currentBannerIndex = index;
+    
+    // Remover classe active de todas as imagens
+    document.querySelectorAll('.banner-img').forEach(img => {
+      img.classList.remove('active');
+    });
+    
+    // Adicionar classe active na imagem atual
+    const imgs = document.querySelectorAll('.banner-img');
+    if (imgs[index]) {
+      imgs[index].classList.add('active');
+      console.log('✅ Banner', index, 'exibido');
     }
-  });
-}
+    
+    // Atualizar dots
+    document.querySelectorAll('.banner-dot').forEach((dot, i) => {
+      if (i === index) {
+        dot.classList.add('active');
+      } else {
+        dot.classList.remove('active');
+      }
+    });
+  }
 
 function goToBanner(index) {
   console.log('🔄 Ir para banner:', index);
