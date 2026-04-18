@@ -902,7 +902,6 @@
     const lojaDoc = await db.collection('lojas').doc(lojaId).get();
     if (lojaDoc.exists) {
       const loja = lojaDoc.data();
-      console.log('✅ Loja carregada:', loja);
       
       const prods = await db.collection('produtos')
         .where('loja_id', '==', lojaId)
@@ -916,16 +915,12 @@
       renderProducts();
       updateMetrics(loja);
       
-      // ✅ CORRIGIR PROBLEMA: Atualizar o select da loja
-      document.getElementById('storeSelect').value = lojaId;
-      
+      // ✅ ADICIONAR ESTAS LINHAS
       console.log('⏳ Carregando dados complementares...');
       await carregarLinkLoja();
       await loadPendingOrders();
       rastrearVisitante();
       console.log('✅ Todos os dados carregados');
-    } else {
-      console.error('❌ Loja não encontrada:', lojaId);
     }
   }
 
@@ -1090,7 +1085,7 @@
     if (tab) tab.classList.add('active');
     event.target.closest('.nav-link').classList.add('active');
     
-    // ✅ CORRIGIR PROBLEMA 1: Carregar configurações ao abrir a aba
+    // ✅ CARREGAR CONFIGURAÇÕES AO ABRIR A ABA
     if (tabName === 'settings') {
       console.log('⚙️ Carregando configurações...');
       setTimeout(() => carregarConfiguracoes(), 100);
@@ -1244,79 +1239,48 @@
   }
   
   // ===== CARREGAR CONFIGURAÇÕES =====
-  function carregarConfiguracoes() {
-    try {
-      if (!currentStore) {
-        console.warn('⚠️ currentStore não definido');
-        alert('❌ Nenhuma loja selecionada. Selecione uma loja primeiro.');
-        return;
+function carregarConfiguracoes() {
+  try {
+    if (!currentStore) return;
+
+    db.collection('lojas').doc(currentStore).get().then(doc => {
+      if (doc.exists) {
+        const loja = doc.data();
+        
+        document.getElementById('storeName').value = loja.nome || '';
+        document.getElementById('storeDescription').value = loja.descricao || '';
+        document.getElementById('storeLogo').value = loja.logo || '';
+        // ✅ ADICIONAR ISTO:
+        document.getElementById('banner1').value = loja.banner1 || '';
+        document.getElementById('banner2').value = loja.banner2 || '';
+        document.getElementById('banner3').value = loja.banner3 || '';
+        
+        console.log('✅ Configurações carregadas');
       }
-
-      console.log('🔄 Carregando configurações para:', currentStore);
-
-      db.collection('lojas').doc(currentStore).get().then(doc => {
-        if (doc.exists) {
-          const loja = doc.data();
-          console.log('📋 Dados da loja:', loja);
-          
-          // Preench erros os campos
-          const storeName = document.getElementById('storeName');
-          const storeDesc = document.getElementById('storeDescription');
-          const storeLogo = document.getElementById('storeLogo');
-          const banner1 = document.getElementById('banner1');
-          const banner2 = document.getElementById('banner2');
-          const banner3 = document.getElementById('banner3');
-          
-          if (storeName) storeName.value = loja.nome || '';
-          if (storeDesc) storeDesc.value = loja.descricao || '';
-          if (storeLogo) storeLogo.value = loja.logo || '';
-          if (banner1) banner1.value = loja.banner1 || '';
-          if (banner2) banner2.value = loja.banner2 || '';
-          if (banner3) banner3.value = loja.banner3 || '';
-          
-          console.log('✅ Configurações carregadas com sucesso');
-        } else {
-          console.error('❌ Documento da loja não encontrado');
-        }
-      }).catch(error => {
-        console.error('❌ Erro ao carregar configurações:', error);
-      });
-    } catch (error) {
-      console.error('❌ Erro na função carregarConfiguracoes:', error);
-    }
+    });
+  } catch (error) {
+    console.error('Erro ao carregar config:', error);
   }
+}
   
   document.getElementById('settingsForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    if (!currentStore) {
-      alert('❌ Nenhuma loja selecionada');
-      return;
-    }
-    
-    console.log('💾 Salvando configurações para:', currentStore);
-    
-    try {
-      const dados = {
-        nome: document.getElementById('storeName').value,
-        descricao: document.getElementById('storeDescription').value,
-        logo: document.getElementById('storeLogo').value,
-        banner1: document.getElementById('banner1').value,
-        banner2: document.getElementById('banner2').value,
-        banner3: document.getElementById('banner3').value
-      };
-      
-      console.log('📝 Dados a salvar:', dados);
-      
-      await db.collection('lojas').doc(currentStore).update(dados);
-      
-      console.log('✅ Configurações salvas com sucesso!');
-      alert('✅ Configurações salvas com sucesso!');
-    } catch (error) {
-      console.error('❌ Erro ao salvar:', error);
-      alert('❌ Erro ao salvar: ' + error.message);
-    }
-  });
+  e.preventDefault();
+  try {
+    await db.collection('lojas').doc(currentStore).update({
+      nome: document.getElementById('storeName').value,
+      descricao: document.getElementById('storeDescription').value,
+      logo: document.getElementById('storeLogo').value,
+      // ✅ ADICIONAR BANNERS:
+      banner1: document.getElementById('banner1').value,
+      banner2: document.getElementById('banner2').value,
+      banner3: document.getElementById('banner3').value
+    });
+    alert('✅ Configurações salvas!');
+  } catch (error) {
+    alert('❌ Erro: ' + error.message);
+  }
+});;
+
   console.log('✅ Dashboard pronto');
 </script>
 
