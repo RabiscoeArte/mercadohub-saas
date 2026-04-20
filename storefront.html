@@ -318,6 +318,158 @@
         padding: 0 1rem;
       }
     }
+
+    /* ========== MODAL CARRINHO ========== */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 2rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+
+    .modal-header {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #999;
+    }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .cart-item-info {
+      flex: 1;
+    }
+
+    .cart-item-name {
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    .cart-item-price {
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .qty-control {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .qty-btn {
+      width: 28px;
+      height: 28px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .qty-btn:hover {
+      background: #f5f5f5;
+    }
+
+    .cart-summary {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 2px solid #eee;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    .summary-total {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #ff6b35;
+      display: flex;
+      justify-content: space-between;
+      padding-top: 1rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .checkout-btn {
+      width: 100%;
+      padding: 1rem;
+      background: #25d366;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 1rem;
+    }
+
+    .checkout-btn:hover {
+      background: #1ea853;
+      transform: translateY(-2px);
+    }
   </style>
 </head>
 <body>
@@ -346,11 +498,6 @@
   </div>
 </div>
 
-<!-- HERO -->
-<div class="hero">
-  <h1 id="storeTitle">Bem-vindo à nossa loja!</h1>
-  <p id="storeDesc">Produtos de qualidade com os melhores preços</p>
-</div>
 
 <!-- BUSCA -->
 <div class="search-bar">
@@ -382,6 +529,7 @@
   const db = firebase.firestore();
 
   let produtos = [];
+  let carrinho = [];
   let lojaId = null;
   let storeData = null;
   let currentBannerIndex = 0;
@@ -523,7 +671,7 @@
           <div class="product-info">
             <div class="product-name">${p.nome}</div>
             <div class="product-price">R$ ${(promo > 0 ? promo : preco).toFixed(2)}</div>
-            <button class="add-btn" onclick="alert('🛒 Produto adicionado!')">🛒 Adicionar</button>
+            <button class="add-btn" onclick="addCart('${p.id}', '${p.nome}', ${premo > 0 ? premo : preco})">🛒 Adicionar</button>
           </div>
         </div>
       `;
@@ -544,13 +692,181 @@
   }
 
   function toggleCart() {
-    alert('🛒 Carrinho em desenvolvimento!');
+    const modal = document.getElementById('cartModal');
+    modal.classList.toggle('show');
+    
+    if (modal.classList.contains('show')) {
+      renderCart();
+    }
   }
+
+  function addCart(prodId, nome, preco) {
+    const item = carrinho.find(i => i.id === prodId);
+    
+    if (item) {
+      item.qtd++;
+    } else {
+      carrinho.push({ id: prodId, nome, preco, qtd: 1 });
+    }
+
+    updateCartBadge();
+    console.log('✅ Produto adicionado ao carrinho:', nome);
+  }
+
+  function updateCartBadge() {
+    const totalQtd = carrinho.reduce((t, i) => t + i.qtd, 0);
+    const badge = document.getElementById('cartBadge');
+    
+    if (totalQtd > 0) {
+      badge.style.display = 'flex';
+      badge.textContent = totalQtd;
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  function renderCart() {
+    const container = document.getElementById('cartItems');
+
+    if (carrinho.length === 0) {
+      container.innerHTML = '<p style="text-align:center;color:#999;padding:2rem;">Seu carrinho está vazio</p>';
+      document.getElementById('checkoutForm').style.display = 'none';
+      return;
+    }
+
+    document.getElementById('checkoutForm').style.display = 'block';
+
+    container.innerHTML = carrinho.map(item => `
+      <div class="cart-item">
+        <div class="cart-item-info">
+          <div class="cart-item-name">${item.nome}</div>
+          <div class="cart-item-price">R$ ${item.preco.toFixed(2)} x ${item.qtd}</div>
+        </div>
+        <div class="qty-control">
+          <button class="qty-btn" onclick="decreaseQty('${item.id}')">−</button>
+          <span style="min-width: 30px; text-align: center;">${item.qtd}</span>
+          <button class="qty-btn" onclick="increaseQty('${item.id}')">+</button>
+          <button class="qty-btn" onclick="removeCart('${item.id}')" style="background: #e53935; color: white;">🗑️</button>
+        </div>
+      </div>
+    `).join('');
+
+    updateCartSummary();
+  }
+
+  function increaseQty(prodId) {
+    const item = carrinho.find(i => i.id === prodId);
+    if (item) item.qtd++;
+    renderCart();
+  }
+
+  function decreaseQty(prodId) {
+    const item = carrinho.find(i => i.id === prodId);
+    if (item && item.qtd > 1) item.qtd--;
+    renderCart();
+  }
+
+  function removeCart(prodId) {
+    carrinho = carrinho.filter(i => i.id !== prodId);
+    updateCartBadge();
+    renderCart();
+  }
+
+  function updateCartSummary() {
+    const subtotal = carrinho.reduce((sum, item) => sum + (item.preco * item.qtd), 0);
+    const total = subtotal;
+
+    document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+    document.getElementById('total').textContent = total.toFixed(2);
+  }
+
+  document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    if (carrinho.length === 0) {
+      alert('Carrinho vazio!');
+      return;
+    }
+
+    const totalValue = carrinho.reduce((sum, item) => sum + (item.preco * item.qtd), 0);
+    
+    let mensagem = '🛒 *Pedido ' + (storeData.nome || 'MercadoHub') + '*\n\n';
+    carrinho.forEach(item => {
+      mensagem += `• ${item.nome} x${item.qtd} = R$ ${(item.preco * item.qtd).toFixed(2)}\n`;
+    });
+    mensagem += `\n*Total: R$ ${totalValue.toFixed(2)}*\n\n`;
+    mensagem += `📍 *Endereço:* ${document.getElementById('customerAddress').value}\n`;
+    mensagem += `💳 *Pagamento:* ${document.getElementById('paymentMethod').value}`;
+
+    const telefone = '55' + document.getElementById('customerPhone').value.replace(/\D/g, '');
+    const url = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
+    window.open(url, '_blank');
+
+    carrinho = [];
+    updateCartBadge();
+    toggleCart();
+    document.getElementById('checkoutForm').reset();
+  });
+
+  document.getElementById('cartModal').addEventListener('click', (e) => {
+    if (e.target.id === 'cartModal') {
+      document.getElementById('cartModal').classList.remove('show');
+    }
+  });
 
   window.addEventListener('load', init);
   init();
 
   console.log('✅ Script pronto');
-</script>
+</script><!-- MODAL CARRINHO -->
+<div id="cartModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      🛒 Meu Carrinho
+      <button class="modal-close" onclick="toggleCart()">✕</button>
+    </div>
+    
+    <div id="cartItems" style="max-height: 300px; overflow-y: auto;">
+      <p style="text-align:center;color:#999;padding:2rem;">Seu carrinho está vazio</p>
+    </div>
+
+    <div class="cart-summary">
+      <div class="summary-row">
+        <span>Subtotal:</span>
+        <span>R$ <span id="subtotal">0.00</span></span>
+      </div>
+      <div class="summary-total">
+        <span>Total:</span>
+        <span>R$ <span id="total">0.00</span></span>
+      </div>
+    </div>
+
+    <form id="checkoutForm" style="display: none;">
+      <div class="form-group">
+        <label for="customerPhone">WhatsApp (com DDD)</label>
+        <input type="tel" id="customerPhone" placeholder="11999999999" required>
+      </div>
+
+      <div class="form-group">
+        <label for="customerAddress">Endereço de Entrega</label>
+        <input type="text" id="customerAddress" placeholder="Rua, número, complemento..." required>
+      </div>
+
+      <div class="form-group">
+        <label for="paymentMethod">Forma de Pagamento</label>
+        <select id="paymentMethod" required>
+          <option value="">Selecionar...</option>
+          <option value="Dinheiro">Dinheiro</option>
+          <option value="PIX">PIX</option>
+          <option value="Débito">Cartão de Débito</option>
+          <option value="Crédito">Cartão de Crédito</option>
+        </select>
+      </div>
+
+      <button type="submit" class="checkout-btn">💬 Confirmar no WhatsApp</button>
+    </form>
+  </div>
+</div>
+
 </body>
 </html>
