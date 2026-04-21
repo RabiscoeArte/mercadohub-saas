@@ -728,6 +728,28 @@
   <input type="text" id="banner3" placeholder="https://...">
 </div>
 
+<!-- ✅ WHATSAPP -->
+<div class="form-group">
+  <label for="whatsappPhone">WhatsApp para Contato (apenas números com DDD)</label>
+  <input type="tel" id="whatsappPhone" placeholder="11999999999">
+</div>
+
+<!-- ✅ INFORMAÇÕES ADICIONAIS -->
+<div class="form-group">
+  <label for="storePhone">Telefone (opcional)</label>
+  <input type="tel" id="storePhone" placeholder="(11) 9999-9999">
+</div>
+
+<div class="form-group">
+  <label for="storeAddress">Endereço (opcional)</label>
+  <input type="text" id="storeAddress" placeholder="Rua, número, bairro">
+</div>
+
+<div class="form-group">
+  <label for="storeEmail">Email (opcional)</label>
+  <input type="email" id="storeEmail" placeholder="contato@loja.com">
+</div>
+
           <button type="submit" class="btn btn-primary">Salvar Configurações</button>
         </form>
       </div>
@@ -1254,6 +1276,10 @@ function carregarConfiguracoes() {
         document.getElementById('banner1').value = loja.banner1 || '';
         document.getElementById('banner2').value = loja.banner2 || '';
         document.getElementById('banner3').value = loja.banner3 || '';
+        document.getElementById('whatsappPhone').value = loja.whatsappPhone || '';
+        document.getElementById('storePhone').value = loja.storePhone || '';
+        document.getElementById('storeAddress').value = loja.storeAddress || '';
+        document.getElementById('storeEmail').value = loja.storeEmail || '';
         
         console.log('✅ Configurações carregadas');
       }
@@ -1273,7 +1299,12 @@ function carregarConfiguracoes() {
       // ✅ ADICIONAR BANNERS:
       banner1: document.getElementById('banner1').value,
       banner2: document.getElementById('banner2').value,
-      banner3: document.getElementById('banner3').value
+      banner3: document.getElementById('banner3').value,
+      // ✅ ADICIONAR WHATSAPP E CONTATOS
+      whatsappPhone: document.getElementById('whatsappPhone').value,
+      storePhone: document.getElementById('storePhone').value,
+      storeAddress: document.getElementById('storeAddress').value,
+      storeEmail: document.getElementById('storeEmail').value
     });
     alert('✅ Configurações salvas!');
   } catch (error) {
