@@ -637,33 +637,8 @@
 
   // ✅ FUNÇÃO PARA CARREGAR FOOTER
   function carregarFooter(loja) {
-    // WhatsApp
-    if (loja.whatsappPhone) {
-      const waPhone = '55' + loja.whatsappPhone.replace(/\D/g, '');
-      document.getElementById('footerWhatsapp').href = `https://wa.me/${waPhone}`;
-      document.getElementById('footerWhatsapp').style.display = 'inline-block';
-    }
-
-    // Telefone
-    if (loja.storePhone) {
-      document.getElementById('footerPhone').href = `tel:${loja.storePhone}`;
-      document.getElementById('footerPhone').style.display = 'inline-block';
-    }
-
-    // Email
-    if (loja.storeEmail) {
-      document.getElementById('footerEmail').href = `mailto:${loja.storeEmail}`;
-      document.getElementById('footerEmail').style.display = 'inline-block';
-    }
-
-    // Endereço
-    if (loja.storeAddress) {
-      document.getElementById('footerAddress').textContent = `📍 ${loja.storeAddress}`;
-    }
-
     // Copyright com nome da loja
     document.getElementById('footerCopyright').textContent = `© ${new Date().getFullYear()} ${loja.nome || 'Loja'}. Todos os direitos reservados.`;
-
     console.log('✅ Footer carregado');
   }
 
@@ -870,55 +845,21 @@
 <footer id="storeFooter" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 3rem 2rem; text-align: center; margin-top: 4rem;">
   <div style="max-width: 1200px; margin: 0 auto;">
     
-    <!-- AVALIAÇÕES -->
-    <div style="margin-bottom: 3rem;">
-      <h3 style="font-family: 'Poppins', sans-serif; font-size: 1.5rem; margin-bottom: 1rem;">Clientes satisfeitos ❤️</h3>
-      <div style="font-size: 1.3rem; margin-bottom: 0.5rem;">
-        <span style="color: #ffc107;">★★★★★</span> <span id="footerRating">4.9 de 5</span> • <span id="footerOrders">+300 pedidos entregues</span>
-      </div>
-      <blockquote style="font-style: italic; margin: 1rem 0; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 8px;">
-        "<span id="footerTestimonial">Entrega rápida e atendimento muito atencioso.</span>"<br>
-        <strong id="footerTestimonialAuthor">– Cliente Satisfeito</strong>
-      </blockquote>
-    </div>
-
     <!-- MEIOS DE PAGAMENTO -->
     <div style="margin-bottom: 3rem;">
-      <h3 style="font-family: 'Poppins', sans-serif; font-size: 1.3rem; margin-bottom: 1rem;">Meios de pagamento</h3>
-      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-        <div style="background: white; padding: 1rem; border-radius: 8px; min-width: 80px;">💳 Cartão</div>
-        <div style="background: white; padding: 1rem; border-radius: 8px; min-width: 80px;">📱 PIX</div>
-        <div style="background: white; padding: 1rem; border-radius: 8px; min-width: 80px;">💰 Dinheiro</div>
-        <div style="background: white; padding: 1rem; border-radius: 8px; min-width: 80px;">📲 Boleto</div>
+      <h3 style="font-family: 'Poppins', sans-serif; font-size: 1.1rem; margin-bottom: 1rem;">Meios de pagamento</h3>
+      <div style="display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; font-size: 1.5rem;">
+        💳 <span style="font-weight: 600;">Cartão</span> &nbsp; 📱 <span style="font-weight: 600;">PIX</span> &nbsp; 💰 <span style="font-weight: 600;">Dinheiro</span>
       </div>
     </div>
 
     <!-- SEGURANÇA -->
     <div style="margin-bottom: 3rem;">
-      <h3 style="font-family: 'Poppins', sans-serif; font-size: 1.3rem; margin-bottom: 1rem;">Compra 100% segura 🔒</h3>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
-        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
-          <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔐</div>
-          <strong>Site Seguro SSL</strong>
-        </div>
-        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
-          <div style="font-size: 2rem; margin-bottom: 0.5rem;">✔️</div>
-          <strong>Compra Garantida</strong>
-        </div>
-        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
-          <div style="font-size: 2rem; margin-bottom: 0.5rem;">📲</div>
-          <strong>Suporte WhatsApp</strong>
-        </div>
-      </div>
-    </div>
-
-    <!-- CONTATO -->
-    <div style="margin-bottom: 3rem; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 2rem;">
-      <h3 style="font-family: 'Poppins', sans-serif; font-size: 1.2rem; margin-bottom: 1rem;">Entre em contato</h3>
-      <div style="display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
-        <a id="footerWhatsapp" href="#" style="color: white; text-decoration: none; background: #25d366; padding: 0.8rem 1.5rem; border-radius: 25px; font-weight: 600; transition: all 0.3s;" onmouseover="this.style.background='#1ea853'" onmouseout="this.style.background='#25d366'">💬 WhatsApp</a>
-        <a id="footerPhone" href="#" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 0.8rem 1.5rem; border-radius: 25px; font-weight: 600; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">📞 Telefone</a>
-        <a id="footerEmail" href="#" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 0.8rem 1.5rem; border-radius: 25px; font-weight: 600; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">✉️ Email</a>
+      <h3 style="font-family: 'Poppins', sans-serif; font-size: 1.1rem; margin-bottom: 1rem;">Compra 100% segura 🔒</h3>
+      <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; font-size: 1rem;">
+        <span>🔐 <strong>SSL</strong></span>
+        <span>✔️ <strong>Garantida</strong></span>
+        <span>📲 <strong>Suporte WhatsApp</strong></span>
       </div>
     </div>
 
